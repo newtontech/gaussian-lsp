@@ -1,83 +1,94 @@
-# Gaussian LSP Development Plan
+# ORCA LSP Development Plan
 
 ## Input File Format
 
 ### File Extensions
-- `.gjf` - Gaussian Job File
-- `.com` - Command file
-- `.inp` - Input file (generic)
+- `.inp` - ORCA input file
 
 ### Structure
 ```
-%chk=filename.chk          ← Link 0 commands (optional, %开头)
-%mem=4GB
-%nproc=4
+! B3LYP def2-TZVP OPT FREQ
+%maxcore 4000
+%pal nprocs 4 end
 
-# B3LYP/6-31G(d) opt freq  ← Route section (#开头)
-
-Title line                 ← Title (blank line before/after)
-
-0 1                        ← Charge and Multiplicity
-H 0.0 0.0 0.0             ← Atom coordinates
-O 0.0 0.0 0.96
-H 0.93 0.0 -0.27
-
---Link1--                  ← Multiple jobs separator
+* xyz 0 1
+  O   0.000000   0.000000   0.000000
+  H   0.757160   0.586260   0.000000
+  H  -0.757160   0.586260   0.000000
+*
 ```
 
-### Route Section Keywords
-**Methods**: HF, DFT (B3LYP, PBE0, M062X), MP2, CCSD(T), CASPT2
-**Basis Sets**: STO-3G, 3-21G, 6-31G(d), 6-311++G(d,p), aug-cc-pVTZ
-**Job Types**: SP, Opt, Freq, TD, IRC, Scan
+### Simple Input Line (!)
+- **Methods**: HF, DFT, MP2, CCSD(T), CASSCF
+- **Basis Sets**: def2-SVP, def2-TZVP, def2-QZVP, cc-pVTZ
+- **Job Types**: SP, OPT, FREQ, NUMFREQ, IRC, SCAN, MD
+
+### % Blocks
+- `%maxcore` - Memory per core (MB)
+- `%pal` - Parallelization
+- `%method` - Method details
+- `%basis` - Basis set details
+- `%scf` - SCF convergence
+- `%geom` - Geometry optimization
+- `%freq` - Frequency calculation
+- `%md` - Molecular dynamics
+- `%loc` - Localization
+- `%plots` - Plot generation
 
 ## Implementation Phases
 
-### Phase 1: Parser (Week 1)
-- [ ] Route section parser
-- [ ] Title section parser
-- [ ] Charge/Multiplicity parser
-- [ ] Geometry parser (Z-matrix and Cartesian)
-- [ ] Link 0 commands parser
+### Phase 1: Simple Input Parser (Week 1)
+- [ ] Route line parser (!)
+- [ ] Method detection
+- [ ] Basis set detection
+- [ ] Job type detection
 
-### Phase 2: LSP Features (Week 2)
-- [ ] Syntax highlighting
-- [ ] Route keyword completion
+### Phase 2: % Block Parser (Week 2)
+- [ ] %maxcore parser
+- [ ] %pal parser
+- [ ] %method parser
+- [ ] %basis parser
+- [ ] %scf parser
+
+### Phase 3: LSP Features (Week 3)
+- [ ] Method completion
 - [ ] Basis set completion
+- [ ] Job type completion
+- [ ] %block completion
 - [ ] Error diagnostics
-- [ ] Hover documentation
-
-### Phase 3: Advanced (Week 3)
-- [ ] Quick Fixes for common errors
-- [ ] Job type validation
-- [ ] Resource estimation
-- [ ] Output file linking
 
 ## Technical Details
 
 ### Parser Design
 ```python
-class GaussianParser:
-    def parse_route(self, line: str) -> RouteSection
-    def parse_geometry(self, lines: List[str]) -> Geometry
-    def parse_zmatrix(self, lines: List[str]) -> ZMatrix
+class ORCAParser:
+    def parse_simple_input(self, line: str) -> SimpleInput
+    def parse_percent_block(self, text: str) -> PercentBlock
+    def parse_geometry(self, text: str) -> Geometry
 ```
 
-### Completion Items
-- 50+ computational methods
-- 200+ basis sets
-- 30+ job types
-- Common keywords with descriptions
+### Methods
+- HF, DFT (B3LYP, PBE, PBE0, TPSS, M06, etc.)
+- MP2, RI-MP2
+- CCSD, CCSD(T), DLPNO-CCSD(T)
+- CASSCF, NEVPT2
+
+### Basis Sets
+- Pople: 3-21G, 6-31G, 6-311G
+- Karlsruhe: def2-SVP, def2-TZVP, def2-QZVP
+- Dunning: cc-pVDZ, cc-pVTZ, cc-pVQZ
+- Auxiliary: def2/J, def2-TZVP/C
 
 ### Diagnostics
-- Invalid route keywords
+- Invalid keywords
 - Missing charge/multiplicity
-- Geometry errors
-- Unmatched parentheses in route
+- Basis set compatibility
+- Memory settings
 
 ## Resources
-- Gaussian User's Manual
-- Gaussian Keyword Reference
-- Computational Chemistry forums
+- ORCA Manual
+- ORCA Input Library
+- ORCA Forum
 
 ---
 
