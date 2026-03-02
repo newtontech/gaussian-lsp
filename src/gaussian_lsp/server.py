@@ -207,19 +207,59 @@ def _analyze_content(content: str) -> List[types.Diagnostic]:
         job = parser.parse(content)
         lines = content.split("\n")
 
-        # Check for missing route section
+        # Check for missing or invalid route section
         if not job.route_section:
-            diagnostics.append(
-                types.Diagnostic(
-                    range=types.Range(
-                        start=types.Position(line=0, character=0),
-                        end=types.Position(line=0, character=1),
-                    ),
-                    message="Missing route section (must start with #)",
-                    severity=types.DiagnosticSeverity.Error,
-                    source="gaussian-lsp",
+            # Find first non-comment, non-link0 line to check if it should be a route
+            for i, line in enumerate(lines):
+                stripped = line.strip()
+                if stripped and not stripped.startswith("!") and not stripped.startswith("%"):
+                    # Check if this line looks like it should be a route section
+                    # (contains method or basis set keywords)
+                    line_upper = stripped.upper()
+                    looks_like_route = (
+                        any(method.upper() in line_upper for method in GAUSSIAN_METHODS)
+                        or any(basis.upper() in line_upper for basis in GAUSSIAN_BASIS_SETS)
+                        or "/" in stripped  # Common pattern: method/basis
+                    )
+                    if looks_like_route:
+                        diagnostics.append(
+                            types.Diagnostic(
+                                range=types.Range(
+                                    start=types.Position(line=i, character=0),
+                                    end=types.Position(line=i, character=len(stripped)),
+                                ),
+                                message="Route section must start with #",
+                                severity=types.DiagnosticSeverity.Error,
+                                source="gaussian-lsp",
+                            )
+                        )
+                    else:
+                        # No route section and first line doesn't look like one
+                        diagnostics.append(
+                            types.Diagnostic(
+                                range=types.Range(
+                                    start=types.Position(line=i, character=0),
+                                    end=types.Position(line=i, character=1),
+                                ),
+                                message="Missing route section (must start with #)",
+                                severity=types.DiagnosticSeverity.Error,
+                                source="gaussian-lsp",
+                            )
+                        )
+                    break
+            else:
+                # No non-comment, non-link0 lines found
+                diagnostics.append(
+                    types.Diagnostic(
+                        range=types.Range(
+                            start=types.Position(line=0, character=0),
+                            end=types.Position(line=0, character=1),
+                        ),
+                        message="Missing route section (must start with #)",
+                        severity=types.DiagnosticSeverity.Error,
+                        source="gaussian-lsp",
+                    )
                 )
-            )
         elif not job.route_section.startswith("#"):
             # Find route line
             for i, line in enumerate(lines):

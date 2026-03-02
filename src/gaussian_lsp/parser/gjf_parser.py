@@ -461,8 +461,14 @@ class GJFParser:
                     key, value = match.groups()
                     self.job.link0[key.lower()] = value.strip()
                     continue
-                else:
+                elif line.startswith("#"):
+                    # This is the route section
+                    self.job.route_section = line
                     section = "route"
+                    continue
+                else:
+                    # No route section, go directly to title
+                    section = "title"
 
             if section == "route":
                 if not line.startswith("#") and not line.startswith("%"):
