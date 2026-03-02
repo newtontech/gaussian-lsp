@@ -1,27 +1,28 @@
 """Additional tests to achieve 100% coverage."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from lsprotocol import types
 
-from gaussian_lsp.parser.gjf_parser import VALID_ELEMENTS, GaussianJob, GJFParser
+from gaussian_lsp.parser.gjf_parser import GaussianJob, GJFParser
 from gaussian_lsp.server import (
     _analyze_content,
     _format_gjf,
     _get_word_at_position,
     completion,
     hover,
-    server,
     main,
     parse_gjf_document,
+    server,
 )
 
 
 class TestParserCoverage:
     """Test parser edge cases for full coverage."""
 
-    def test_parse_modredundant_with_bond(self):
+    def test_parse_modredundant_with_bond(self) -> None:
         """Test parsing ModRedundant with B command."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -38,7 +39,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_modredundant_with_angle(self):
+    def test_parse_modredundant_with_angle(self) -> None:
         """Test parsing ModRedundant with A command."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -56,7 +57,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_modredundant_with_dihedral(self):
+    def test_parse_modredundant_with_dihedral(self) -> None:
         """Test parsing ModRedundant with D command."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -75,7 +76,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_modredundant_stepwise(self):
+    def test_parse_modredundant_stepwise(self) -> None:
         """Test parsing multiple ModRedundant lines."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -93,7 +94,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 2
 
-    def test_parse_with_l(self):
+    def test_parse_with_l(self) -> None:
         """Test parsing ModRedundant with L (linear bend)."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -111,7 +112,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_with_r_command(self):
+    def test_parse_with_r_command(self) -> None:
         """Test parsing ModRedundant with R (remove) command."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -128,7 +129,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_with_c_command(self):
+    def test_parse_with_c_command(self) -> None:
         """Test parsing ModRedundant with C (change) command."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -145,7 +146,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_with_k_command(self):
+    def test_parse_with_k_command(self) -> None:
         """Test parsing ModRedundant with K (kick) command."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -162,7 +163,7 @@ F
         job = parser.parse(content)
         assert len(job.modredundant) >= 1
 
-    def test_parse_multi_line_route_continuation(self):
+    def test_parse_multi_line_route_continuation(self) -> None:
         """Test parsing route that continues on multiple lines."""
         content = """%chk=test.chk
 # B3LYP/6-31G(d)
@@ -180,7 +181,7 @@ H 0.0 0.0 0.0
         assert "# opt freq" in job.route_section
         assert "# scrf=iefpcm" in job.route_section
 
-    def test_parse_modredundant_with_modred_pattern(self):
+    def test_parse_modredundant_with_modred_pattern(self) -> None:
         """Test parsing when ModRedundant line starts with pattern."""
         content = """# B3LYP/6-31G(d) opt
 
@@ -194,10 +195,10 @@ H 1.0 0.0 0.0
 F
 """
         parser = GJFParser()
-        job = parser.parse(content)
+        _ = parser.parse(content)
         # Should detect ModRedundant section
 
-    def test_validate_known_element_lowercase(self):
+    def test_validate_known_element_lowercase(self) -> None:
         """Test validation recognizes lowercase elements."""
         content = """# HF/STO-3G
 
@@ -213,7 +214,7 @@ o 0.0 1.0 0.0
         # Should be valid (lowercase elements are normalized)
         assert is_valid
 
-    def test_validate_with_numeric_atom_type(self):
+    def test_validate_with_numeric_atom_type(self) -> None:
         """Test validation handles numeric atom types (ghost atoms)."""
         content = """# HF/STO-3G
 
@@ -227,7 +228,7 @@ Test
         # Numeric atom types should be allowed
         assert is_valid
 
-    def test_validate_suspicious_charge_mult(self):
+    def test_validate_suspicious_charge_mult(self) -> None:
         """Test validation allows various charge/mult combinations."""
         content = """# UHF/6-31G(d)
 
@@ -240,7 +241,7 @@ H 0.0 0.0 0.0
         is_valid, errors = parser.validate(content)
         assert is_valid
 
-    def test_validate_job_types(self):
+    def test_validate_job_types(self) -> None:
         """Test validation with various job types."""
         for job_type in ["IRC", "SCAN", "TS", "RAMAN", "POLAR"]:
             content = f"""# B3LYP/6-31G(d) {job_type}
@@ -254,7 +255,7 @@ H 0.0 0.0 0.0
             is_valid, errors = parser.validate(content)
             assert is_valid, f"Failed for job type {job_type}"
 
-    def test_validate_with_counterpoise(self):
+    def test_validate_with_counterpoise(self) -> None:
         """Test validation with counterpoise."""
         content = """# B3LYP/6-31G(d) Counterpoise=2
 
@@ -274,7 +275,7 @@ H 1.0 0.0 0.0
 class TestServerCoverage:
     """Test server features for full coverage."""
 
-    def test_completion_feature_extended(self):
+    def test_completion_feature_extended(self) -> None:
         """Test completion with full mock setup."""
         mock_params = MagicMock()
         mock_params.text_document.uri = "file:///test.gjf"
@@ -291,7 +292,7 @@ class TestServerCoverage:
             assert hasattr(result, "items")
             assert len(result.items) > 0
 
-    def test_hover_with_basis_set(self):
+    def test_hover_with_basis_set(self) -> None:
         """Test hover for basis set keywords."""
         mock_params = MagicMock()
         mock_params.text_document.uri = "file:///test.gjf"
@@ -307,7 +308,7 @@ class TestServerCoverage:
             # May return info or None depending on position
             assert result is None or hasattr(result, "contents")
 
-    def test_hover_on_keyword_doc(self):
+    def test_hover_on_keyword_doc(self) -> None:
         """Test hover when word is in KEYWORD_DOCS."""
         mock_params = MagicMock()
         mock_params.text_document.uri = "file:///test.gjf"
@@ -324,7 +325,7 @@ class TestServerCoverage:
             assert result is not None
             assert hasattr(result, "contents")
 
-    def test_get_word_at_extended_positions(self):
+    def test_get_word_at_extended_positions(self) -> None:
         """Test word extraction at various positions."""
         line = "# B3LYP/6-31G(d) opt freq"
 
@@ -340,7 +341,7 @@ class TestServerCoverage:
         word = _get_word_at_position(line, len(line))
         assert word == ""
 
-    def test_diagnostic_with_valid_content_no_warnings(self):
+    def test_diagnostic_with_valid_content_no_warnings(self) -> None:
         """Test diagnostic with valid content has no errors."""
         content = """%chk=test.chk
 # B3LYP/6-31G(d) opt
@@ -356,7 +357,7 @@ H 0.0 0.0 0.0
         errors = [d for d in diagnostics if d.severity == types.DiagnosticSeverity.Error]
         assert len(errors) == 0
 
-    def test_diagnostic_missing_route_no_hash(self):
+    def test_diagnostic_missing_route_no_hash(self) -> None:
         """Test diagnostic catches route without hash."""
         content = """B3LYP/6-31G(d)
 
@@ -370,7 +371,7 @@ H 0.0 0.0 0.0
         error_msgs = [d.message for d in diagnostics]
         assert any("route" in m.lower() and "#" in m for m in error_msgs)
 
-    def test_diagnostic_route_not_starting_with_hash(self):
+    def test_diagnostic_route_not_starting_with_hash(self) -> None:
         """Test diagnostic catches route that doesn't start with #."""
         content = """B3LYP/6-31G(d)
 
@@ -385,7 +386,7 @@ H 0.0 0.0 0.0
         warning_msgs = [d.message for d in diagnostics]
         assert any("#" in m for m in warning_msgs)
 
-    def test_diagnostic_with_known_element(self):
+    def test_diagnostic_with_known_element(self) -> None:
         """Test diagnostic doesn't flag valid elements."""
         content = """# B3LYP/6-31G(d)
 
@@ -403,7 +404,7 @@ H 0.0 0.0 1.0
         for d in diagnostics:
             assert "Unknown element" not in d.message
 
-    def test_diagnostic_with_link0(self):
+    def test_diagnostic_with_link0(self) -> None:
         """Test diagnostic handles files with Link0."""
         content = """%chk=test.chk
 %mem=2GB
@@ -421,7 +422,7 @@ H 0.0 0.0 0.0
         errors = [d for d in diagnostics if d.severity == types.DiagnosticSeverity.Error]
         assert len(errors) == 0
 
-    def test_diagnostic_no_method_warning(self):
+    def test_diagnostic_no_method_warning(self) -> None:
         """Test diagnostic warns about missing method."""
         content = """# 6-31G(d)
 
@@ -436,7 +437,7 @@ H 0.0 0.0 0.0
         msgs = [d.message for d in diagnostics]
         assert any("method" in m.lower() for m in msgs)
 
-    def test_diagnostic_no_basis_warning(self):
+    def test_diagnostic_no_basis_warning(self) -> None:
         """Test diagnostic warns about missing basis."""
         content = """# B3LYP
 
@@ -451,8 +452,7 @@ H 0.0 0.0 0.0
         msgs = [d.message for d in diagnostics]
         assert any("basis" in m.lower() for m in msgs)
 
-
-    def test_diagnostic_unknown_element(self):
+    def test_diagnostic_unknown_element(self) -> None:
         """Test diagnostic warns about unknown elements."""
         content = """# B3LYP/6-31G(d)
 
@@ -467,7 +467,7 @@ Xx 0.0 0.0 0.0
         msgs = [d.message for d in diagnostics]
         assert any("Unknown element" in m for m in msgs)
 
-    def test_format_gjf_with_valid_input(self):
+    def test_format_gjf_with_valid_input(self) -> None:
         """Test formatting with valid input."""
         content = """%chk=test.chk
 # B3LYP/6-31G(d) opt
@@ -483,7 +483,7 @@ H   0.0   0.0   0.0
         assert "# B3LYP/6-31G(d) opt" in formatted
         assert "Test calculation" in formatted
 
-    def test_format_gjf_with_invalid_route(self):
+    def test_format_gjf_with_invalid_route(self) -> None:
         """Test formatting returns original for invalid route."""
         content = """Test
 
@@ -493,7 +493,7 @@ H 0.0 0.0 0.0
         formatted = _format_gjf(content)
         assert formatted == content
 
-    def test_server_initialization(self):
+    def test_server_initialization(self) -> None:
         """Test server is properly initialized."""
         assert server.name == "gaussian-lsp"
         assert server.version == "0.2.0"
@@ -502,7 +502,7 @@ H 0.0 0.0 0.0
 class TestParserHelperMethods:
     """Test parser helper methods."""
 
-    def test_parser_get_methods(self):
+    def test_parser_get_methods(self) -> None:
         """Test get_methods returns list."""
         parser = GJFParser()
         methods = parser.get_methods()
@@ -510,7 +510,7 @@ class TestParserHelperMethods:
         assert len(methods) > 0
         assert "B3LYP" in methods
 
-    def test_parser_get_basis_sets(self):
+    def test_parser_get_basis_sets(self) -> None:
         """Test get_basis_sets returns list."""
         parser = GJFParser()
         basis_sets = parser.get_basis_sets()
@@ -518,7 +518,7 @@ class TestParserHelperMethods:
         assert len(basis_sets) > 0
         assert "6-31G(d)" in basis_sets
 
-    def test_parser_get_job_types(self):
+    def test_parser_get_job_types(self) -> None:
         """Test get_job_types returns list."""
         parser = GJFParser()
         job_types = parser.get_job_types()
@@ -530,7 +530,7 @@ class TestParserHelperMethods:
 class TestGaussianJobMethods:
     """Test GaussianJob methods."""
 
-    def test_to_gjf_empty_modredundant(self):
+    def test_to_gjf_empty_modredundant(self) -> None:
         """Test to_gjf with empty modredundant."""
         job = GaussianJob(
             route_section="# HF/STO-3G",
@@ -548,22 +548,24 @@ class TestGaussianJobMethods:
 class TestParserFileOperations:
     """Test parser file operations."""
 
-    def test_parse_file_not_found(self):
+    def test_parse_file_not_found(self) -> None:
         """Test parse_file raises FileNotFoundError for non-existent file."""
         parser = GJFParser()
         with pytest.raises(FileNotFoundError):
             parser.parse_file("/nonexistent/path/test.gjf")
 
-    def test_parse_file_success(self, tmp_path):
+    def test_parse_file_success(self, tmp_path: "Path") -> None:
         """Test parse_file successfully parses existing file."""
         gjf_file = tmp_path / "test.gjf"
-        gjf_file.write_text("""# B3LYP/6-31G(d)
+        gjf_file.write_text(
+            """# B3LYP/6-31G(d)
 
 Test
 
 0 1
 H 0.0 0.0 0.0
-""")
+"""
+        )
         parser = GJFParser()
         job = parser.parse_file(str(gjf_file))
         assert job.title == "Test"
@@ -573,7 +575,7 @@ H 0.0 0.0 0.0
 class TestValidationEdgeCases:
     """Test validation edge cases."""
 
-    def test_validate_empty_content(self):
+    def test_validate_empty_content(self) -> None:
         """Test validate handles empty content."""
         content = ""
         parser = GJFParser()
@@ -584,7 +586,7 @@ class TestValidationEdgeCases:
 class TestMainFunction:
     """Test main function."""
 
-    def test_main_calls_start_io(self):
+    def test_main_calls_start_io(self) -> None:
         """Test that main calls server.start_io."""
         with patch("gaussian_lsp.server.server") as mock_server:
             main()
@@ -594,7 +596,7 @@ class TestMainFunction:
 class TestParseGJFDocument:
     """Test parse_gjf_document helper."""
 
-    def test_parse_gjf_document_success(self):
+    def test_parse_gjf_document_success(self) -> None:
         """Test parse_gjf_document with valid content."""
         content = """# B3LYP/6-31G(d)
 
@@ -607,7 +609,7 @@ H 0.0 0.0 0.0
         assert result is not None
         assert result.title == "Test"
 
-    def test_parse_gjf_document_failure(self):
+    def test_parse_gjf_document_failure(self) -> None:
         """Test parse_gjf_document with invalid content."""
         # Content that will actually cause a parse error
         content = """# B3LYP/6-31G(d)
@@ -626,7 +628,7 @@ Test
 class TestFormatGJFSuccess:
     """Test format_gjf formatting success paths."""
 
-    def test_format_gjf_success_path(self):
+    def test_format_gjf_success_path(self) -> None:
         """Test format_gjf successful formatting."""
         content = """# B3LYP/6-31G(d) opt freq
 
@@ -640,7 +642,7 @@ H 1.0 0.0 0.0
         # Should return formatted content, not original
         assert formatted != content or "# B3LYP" in formatted
 
-    def test_format_gjf_parse_exception(self):
+    def test_format_gjf_parse_exception(self) -> None:
         """Test format_gjf handles parse exception."""
         content = """# B3LYP/6-31G(d)
 
@@ -657,7 +659,7 @@ invalid atom line
 class TestDiagnosticExceptions:
     """Test diagnostic exception handling."""
 
-    def test_diagnostic_parse_error(self):
+    def test_diagnostic_parse_error(self) -> None:
         """Test diagnostic handles parse errors gracefully."""
         content = """# B3LYP/6-31G(d)
 
@@ -674,7 +676,7 @@ X 0.0 0.0 0.0
 class TestRemainingCoverage:
     """Additional tests to cover remaining uncovered lines."""
 
-    def test_hover_method_match(self):
+    def test_hover_method_match(self) -> None:
         """Test hover returns method info when word matches method."""
         mock_params = MagicMock()
         mock_params.text_document.uri = "file:///test.gjf"
@@ -691,7 +693,7 @@ class TestRemainingCoverage:
             assert result is not None
             assert hasattr(result, "contents")
 
-    def test_hover_basis_match(self):
+    def test_hover_basis_match(self) -> None:
         """Test hover returns basis info when word matches basis set."""
         mock_params = MagicMock()
         mock_params.text_document.uri = "file:///test.gjf"
@@ -707,7 +709,7 @@ class TestRemainingCoverage:
             # Should return hover info for STO-3G basis
             assert result is not None or result is None  # Depends on exact position
 
-    def test_diagnostic_route_without_hash(self):
+    def test_diagnostic_route_without_hash(self) -> None:
         """Test diagnostic for route not starting with hash."""
         content = """B3LYP/6-31G(d)
 
@@ -722,7 +724,7 @@ H 0.0 0.0 0.0
         # When route_section is empty, it reports "Missing route section"
         assert any("route" in m.lower() for m in msgs)
 
-    def test_diagnostic_missing_atoms_section(self):
+    def test_diagnostic_missing_atoms_section(self) -> None:
         """Test diagnostic for missing atoms section."""
         content = """# B3LYP/6-31G(d)
 
@@ -736,7 +738,7 @@ Test
         msgs = [d.message for d in diagnostics]
         assert any("No atoms defined" in m for m in msgs)
 
-    def test_diagnostic_unknown_element_warning(self):
+    def test_diagnostic_unknown_element_warning(self) -> None:
         """Test diagnostic warns about unknown elements."""
         content = """# B3LYP/6-31G(d)
 
@@ -750,7 +752,7 @@ Xyz 0.0 0.0 0.0
         msgs = [d.message for d in diagnostics]
         assert any("Unknown element" in m for m in msgs)
 
-    def test_diagnostic_invalid_multiplicity(self):
+    def test_diagnostic_invalid_multiplicity(self) -> None:
         """Test diagnostic for invalid multiplicity."""
         content = """# B3LYP/6-31G(d)
 
@@ -764,7 +766,7 @@ H 0.0 0.0 0.0
         msgs = [d.message for d in diagnostics]
         assert any("Invalid multiplicity" in m for m in msgs)
 
-    def test_diagnostic_parse_exception(self):
+    def test_diagnostic_parse_exception(self) -> None:
         """Test diagnostic handles parse exceptions."""
         content = """# B3LYP/6-31G(d)
 
@@ -777,7 +779,7 @@ H 0.0 0.0 0.0
         # Should have at least one diagnostic
         assert len(diagnostics) > 0
 
-    def test_format_gjf_exception_path(self):
+    def test_format_gjf_exception_path(self) -> None:
         """Test format_gjf exception handling path."""
         # Content that validates but fails to parse (edge case)
         content = """# B3LYP/6-31G(d)
@@ -791,10 +793,11 @@ H 0.0 0.0 0.0
         # Should return formatted content
         assert "# B3LYP/6-31G(d)" in formatted
 
-    def test_parse_file_with_modredundant(self, tmp_path):
+    def test_parse_file_with_modredundant(self, tmp_path: "Path") -> None:
         """Test parse_file with modredundant section."""
         gjf_file = tmp_path / "test_modred.gjf"
-        gjf_file.write_text("""# B3LYP/6-31G(d) opt
+        gjf_file.write_text(
+            """# B3LYP/6-31G(d) opt
 
 Test
 
@@ -804,12 +807,13 @@ H 1.0 0.0 0.0
 
 B 1 2
 F
-""")
+"""
+        )
         parser = GJFParser()
         job = parser.parse_file(str(gjf_file))
         assert len(job.modredundant) > 0
 
-    def test_get_basis_sets_returns_copy(self):
+    def test_get_basis_sets_returns_copy(self) -> None:
         """Test get_basis_sets returns a copy."""
         parser = GJFParser()
         basis1 = parser.get_basis_sets()
@@ -817,15 +821,16 @@ F
         assert basis1 is not basis2  # Should be different objects
         assert basis1 == basis2  # But same content
 
-    def test_convenience_functions_exist(self):
+    def test_convenience_functions_exist(self) -> None:
         """Test convenience functions are importable."""
         from gaussian_lsp.parser.gjf_parser import (
-            parse_gjf,
-            parse_gjf_file,
             parse_com,
             parse_com_file,
+            parse_gjf,
+            parse_gjf_file,
             validate_gjf,
         )
+
         # Just verify they exist
         assert callable(parse_gjf)
         assert callable(parse_gjf_file)
@@ -837,7 +842,7 @@ F
 class TestFinalCoverage:
     """Final tests to reach 100% coverage."""
 
-    def test_format_gjf_with_parsing_exception(self):
+    def test_format_gjf_with_parsing_exception(self) -> None:
         """Test _format_gjf when parsing raises exception after validation."""
         # This is hard to trigger, but we can test the exception path
         # by using content that might fail during to_gjf()
@@ -852,9 +857,10 @@ H 0.0 0.0 0.0
         formatted = _format_gjf(content)
         assert "# B3LYP/6-31G(d)" in formatted
 
-    def test_diagnostic_feature_full(self):
+    def test_diagnostic_feature_full(self) -> None:
         """Test diagnostic feature with full params."""
         from unittest.mock import MagicMock, patch
+
         from gaussian_lsp.server import diagnostic
 
         mock_params = MagicMock()
@@ -875,9 +881,10 @@ H 0.0 0.0 0.0
             assert result is not None
             assert hasattr(result, "items")
 
-    def test_formatting_feature_full(self):
+    def test_formatting_feature_full(self) -> None:
         """Test formatting feature with full params."""
         from unittest.mock import MagicMock, patch
+
         from gaussian_lsp.server import formatting
 
         mock_params = MagicMock()
@@ -899,9 +906,10 @@ H 0.0 0.0 0.0
             # Result should be list of TextEdit or empty list
             assert isinstance(result, list)
 
-    def test_formatting_returns_empty_when_unchanged(self):
+    def test_formatting_returns_empty_when_unchanged(self) -> None:
         """Test formatting returns empty list when content unchanged."""
         from unittest.mock import MagicMock, patch
+
         from gaussian_lsp.server import formatting
 
         mock_params = MagicMock()
@@ -927,9 +935,10 @@ H 0.0 0.0 0.0
 class TestCoverageEdgeCases:
     """Tests for specific uncovered lines."""
 
-    def test_element_with_parens_in_diagnostic(self):
+    def test_element_with_parens_in_diagnostic(self) -> None:
         """Test diagnostic handles elements with parentheses."""
         from gaussian_lsp.server import _analyze_content
+
         content = """# B3LYP/6-31G(d)
 
 Test
@@ -943,9 +952,10 @@ H(ISO=2) 0.0 0.0 0.0
         for d in diagnostics:
             assert "Unknown element" not in d.message or "H(ISO=2)" not in d.message
 
-    def test_validate_gjf_with_warnings(self):
+    def test_validate_gjf_with_warnings(self) -> None:
         """Test validate_gjf function returns warnings."""
         from gaussian_lsp.parser.gjf_parser import validate_gjf
+
         content = """# B3LYP/6-31G(d)
 
 Test
@@ -957,18 +967,20 @@ H 0.0 0.0 0.0
         is_valid, messages = validate_gjf(content)
         assert is_valid
 
-    def test_main_function_direct_call(self):
+    def test_main_function_direct_call(self) -> None:
         """Test main function can be called (mocked)."""
         from unittest.mock import patch
+
         from gaussian_lsp.server import main
-        
+
         with patch("gaussian_lsp.server.server") as mock_server:
             main()
             mock_server.start_io.assert_called_once()
 
-    def test_server_import_main_block(self):
+    def test_server_import_main_block(self) -> None:
         """Test server module can be imported."""
         # Just verify the module can be imported
         import gaussian_lsp.server as server_module
-        assert hasattr(server_module, 'main')
-        assert hasattr(server_module, 'server')
+
+        assert hasattr(server_module, "main")
+        assert hasattr(server_module, "server")
