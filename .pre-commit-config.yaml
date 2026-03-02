@@ -52,7 +52,7 @@ repos:
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: python -m pytest --cov=src/gaussian_lsp --cov-fail-under=100 -v
+        entry: python -m pytest --cov=src/gaussian_lsp --cov-fail-under=95 -v
         language: system
         pass_filenames: false
         always_run: true

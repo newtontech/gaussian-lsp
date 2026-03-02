@@ -411,7 +411,8 @@ class GJFParser:
     COMMENT_PATTERN = re.compile(r"^!")
     MODRED_PATTERN = re.compile(r"^[MBADRLSFCK]\s+", re.IGNORECASE)
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the parser."""
         self.job = GaussianJob()
 
     def parse(self, content: str) -> GaussianJob:
