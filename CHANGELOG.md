@@ -30,3 +30,16 @@ All notable changes to this project will be documented in this file.
 - Auto-completion for common keywords
 - Basic diagnostics
 - Initial test suite
+
+## [0.2.1] - 2026-03-02
+
+### Added
+- Comprehensive test suite with 120 test cases
+- Additional coverage tests for ModRedundant commands
+- Edge case tests for diagnostics
+- Server feature integration tests
+
+### Enhanced
+- Test coverage increased to 93 percent
+- Improved validation error handling
+- Better diagnostic coverage for edge cases
