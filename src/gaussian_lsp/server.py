@@ -1,6 +1,5 @@
-"""
-Gaussian Language Server Protocol implementation
-"""
+"""Gaussian Language Server Protocol implementation."""
+from typing import List, Optional
 
 from lsprotocol import types
 from pygls.server import LanguageServer
@@ -10,6 +9,7 @@ from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_JOB_TYPES,
     GAUSSIAN_METHODS,
     VALID_ELEMENTS,
+    GaussianJob,
     GJFParser,
 )
 
@@ -19,22 +19,22 @@ server = LanguageServer("gaussian-lsp", "0.2.0")
 # Documentation for keywords
 KEYWORD_DOCS = {
     # Methods
-    "HF": "Hartree-Fock method. The simplest ab initio method using a single Slater determinant wavefunction.",
-    "RHF": "Restricted Hartree-Fock. For closed-shell systems (all electrons paired).",
-    "UHF": "Unrestricted Hartree-Fock. Allows different spatial orbitals for alpha and beta spins.",
-    "ROHF": "Restricted Open-shell Hartree-Fock. For open-shell systems with restricted doublet orbitals.",
-    "MP2": "Moller-Plesset second-order perturbation theory. Includes electron correlation effects.",
+    "HF": "Hartree-Fock method. Simplest ab initio using single Slater determinant.",
+    "RHF": "Restricted Hartree-Fock. For closed-shell systems.",
+    "UHF": "Unrestricted Hartree-Fock. Different orbitals for alpha/beta spins.",
+    "ROHF": "Restricted Open-shell Hartree-Fock. For open-shell systems.",
+    "MP2": "Moller-Plesset 2nd order perturbation. Includes electron correlation.",
     "MP3": "Moller-Plesset third-order perturbation theory.",
     "MP4": "Moller-Plesset fourth-order perturbation theory.",
     "CCSD": "Coupled Cluster Singles and Doubles. High-level correlation method.",
-    "CCSD(T)": "CCSD with perturbative triples. 'Gold standard' for many quantum chemistry calculations.",
-    "B3LYP": "Hybrid DFT functional: Becke 3-parameter, Lee-Yang-Parr. Very popular general-purpose functional.",
+    "CCSD(T)": "CCSD with perturbative triples. Gold standard for QC.",
+    "B3LYP": "Becke 3-parameter, Lee-Yang-Parr hybrid DFT. Popular functional.",
     "PBE": "Perdew-Burke-Ernzerhof gradient-corrected DFT functional.",
     "PBE0": "Hybrid version of PBE with 25% exact exchange.",
-    "M06": "Minnesota 2006 functional. Good for transition metals and non-covalent interactions.",
-    "M062X": "Minnesota 2006 functional with double hybrid. Good for main group chemistry.",
+    "M06": "Minnesota 2006 functional. Good for transition metals.",
+    "M062X": "Minnesota 2006 functional with double hybrid. Main group chemistry.",
     "wB97XD": "Long-range corrected hybrid functional with dispersion correction.",
-    "CAM-B3LYP": "Coulomb-attenuating method applied to B3LYP. Good for charge transfer excitations.",
+    "CAM-B3LYP": "Coulomb-attenuating B3LYP. Good for charge transfer.",
     # Basis sets
     "STO-3G": "Minimal basis set. Fast but not accurate. Good for qualitative results.",
     "3-21G": "Split-valence basis set. Better than minimal, still fast.",
@@ -42,18 +42,18 @@ KEYWORD_DOCS = {
     "6-31G(d)": "6-31G with polarization functions on heavy atoms.",
     "6-31G(d,p)": "6-31G with polarization functions on all atoms.",
     "6-311G": "Triple-split valence basis set.",
-    "cc-pVDZ": "Correlation-consistent polarized valence double-zeta. Good for correlated methods.",
+    "cc-pVDZ": "Correlation-consistent polarized valence double-zeta.",
     "cc-pVTZ": "Correlation-consistent polarized valence triple-zeta.",
     "cc-pVQZ": "Correlation-consistent polarized valence quadruple-zeta.",
     "def2-SVP": "Karlsruhe split-valence basis set with polarization.",
-    "def2-TZVP": "Karlsruhe triple-zeta basis set with polarization. Good balance of accuracy/cost.",
+    "def2-TZVP": "Karlsruhe triple-zeta with polarization. Good balance.",
     "def2-QZVP": "Karlsruhe quadruple-zeta basis set.",
-    "LANL2DZ": "Los Alamos National Laboratory double-zeta basis with ECP for heavy elements.",
+    "LANL2DZ": "LANL double-zeta with ECP for heavy elements.",
     # Job types
     "SP": "Single point energy calculation.",
-    "OPT": "Geometry optimization. Finds the local minimum energy structure.",
-    "FREQ": "Frequency calculation. Computes vibrational frequencies and thermochemical properties.",
-    "OPT FREQ": "Optimization followed by frequency calculation. Verifies stationary point.",
+    "OPT": "Geometry optimization. Finds local minimum energy structure.",
+    "FREQ": "Frequency calculation. Computes vibrational frequencies.",
+    "OPT FREQ": "Optimization + frequency. Verifies stationary point.",
     "TS": "Transition state optimization. Searches for first-order saddle point.",
     "IRC": "Intrinsic Reaction Coordinate. Follows reaction path from TS.",
     "SCAN": "Potential energy surface scan.",
@@ -63,17 +63,14 @@ KEYWORD_DOCS = {
     "TD": "Time-dependent DFT. For excited states.",
     "CIS": "Configuration Interaction Singles. Excited state method.",
     "COUNTERPOISE": "Counterpoise correction for basis set superposition error.",
-    "ONIOM": "Own N-layered Integrated molecular Orbital and molecular Mechanics.",
+    "ONIOM": "N-layered Integrated molecular Orbital and Mechanics.",
 }
 
 
 @server.feature(types.TEXT_DOCUMENT_COMPLETION)
-def completion(params: types.CompletionParams):
+def completion(params: types.CompletionParams) -> types.CompletionList:
     """Provide completions for Gaussian keywords."""
     items = []
-
-    # Get document content to provide context-aware completions
-    document = server.workspace.get_text_document(params.text_document.uri)
 
     for keyword in GAUSSIAN_METHODS:
         items.append(
@@ -112,7 +109,7 @@ def completion(params: types.CompletionParams):
 
 
 @server.feature(types.TEXT_DOCUMENT_HOVER)
-def hover(params: types.HoverParams):
+def hover(params: types.HoverParams) -> Optional[types.Hover]:
     """Provide hover information."""
     document = server.workspace.get_text_document(params.text_document.uri)
 
@@ -167,7 +164,7 @@ def _get_word_at_position(line: str, position: int) -> str:
 
 
 @server.feature(types.TEXT_DOCUMENT_DIAGNOSTIC)
-def diagnostic(params: types.DocumentDiagnosticParams):
+def diagnostic(params: types.DocumentDiagnosticParams) -> types.RelatedFullDocumentDiagnosticReport:
     """Provide diagnostics for GJF files."""
     document = server.workspace.get_text_document(params.text_document.uri)
     content = document.source
@@ -180,7 +177,7 @@ def diagnostic(params: types.DocumentDiagnosticParams):
 
 
 @server.feature(types.TEXT_DOCUMENT_FORMATTING)
-def formatting(params: types.DocumentFormattingParams):
+def formatting(params: types.DocumentFormattingParams) -> List[types.TextEdit]:
     """Format GJF document."""
     document = server.workspace.get_text_document(params.text_document.uri)
     content = document.source
@@ -201,7 +198,7 @@ def formatting(params: types.DocumentFormattingParams):
     ]
 
 
-def _analyze_content(content: str) -> list:
+def _analyze_content(content: str) -> List[types.Diagnostic]:
     """Analyze GJF content and return diagnostics."""
     diagnostics = []
     parser = GJFParser()
@@ -331,7 +328,7 @@ def _analyze_content(content: str) -> list:
                                 start=types.Position(line=i, character=0),
                                 end=types.Position(line=i, character=len(line)),
                             ),
-                            message="No recognizable basis set found (consider adding one or use Gen)",
+                            message="No recognizable basis set (add one or use Gen)",
                             severity=types.DiagnosticSeverity.Warning,
                             source="gaussian-lsp",
                         )
@@ -373,7 +370,7 @@ def _format_gjf(content: str) -> str:
         return content
 
 
-def parse_gjf_document(content):
+def parse_gjf_document(content: str) -> Optional[GaussianJob]:
     """Parse GJF document content."""
     parser = GJFParser()
     try:
@@ -382,7 +379,7 @@ def parse_gjf_document(content):
         return None
 
 
-def main():
+def main() -> None:
     """Start the server."""
     server.start_io()
 

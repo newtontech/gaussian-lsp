@@ -1,3 +1,5 @@
+"""GJF/COM file parser module."""
+
 import sys
 from pathlib import Path
 

@@ -1,7 +1,6 @@
 """Tests for Gaussian LSP server."""
-from unittest.mock import MagicMock, PropertyMock, patch
 
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 class TestGaussianServer:
@@ -64,7 +63,7 @@ class TestGaussianServer:
 
     def test_hover_feature_with_keyword(self):
         """Test hover feature returns documentation for known keywords."""
-        from gaussian_lsp.server import _get_word_at_position, hover
+        from gaussian_lsp.server import hover
 
         mock_params = MagicMock()
         mock_params.text_document.uri = "file:///test.gjf"

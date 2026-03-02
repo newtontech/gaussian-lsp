@@ -1,6 +1,5 @@
 """Tests for Gaussian GJF parser."""
 
-from pathlib import Path
 
 import pytest
 
