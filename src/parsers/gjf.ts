@@ -23,40 +23,40 @@ export interface Atom {
 export class GJFParser {
   parse(content: string): GaussianInput {
     const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
+
     const link0 = new Map<string, string>();
     let routeLine = '';
     let title = '';
     let charge = 0;
     let multiplicity = 1;
     const atoms: Atom[] = [];
-    
+
     let section: 'link0' | 'route' | 'title' | 'charge' | 'geometry' = 'link0';
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // Link 0 section (% commands)
       if (line.startsWith('%')) {
         const [key, value] = line.slice(1).split('=', 2);
         link0.set(key.trim(), value?.trim() || '');
         continue;
       }
-      
+
       // Route section (#)
       if (line.startsWith('#')) {
         section = 'route';
         routeLine = line;
         continue;
       }
-      
+
       // Title section (blank line after route)
       if (section === 'route' && !line.startsWith('#')) {
         section = 'title';
         title = line;
         continue;
       }
-      
+
       // Charge and multiplicity
       if (section === 'title') {
         section = 'charge';
@@ -66,7 +66,7 @@ export class GJFParser {
         section = 'geometry';
         continue;
       }
-      
+
       // Geometry
       if (section === 'geometry') {
         const parts = line.split(/\s+/);
@@ -80,10 +80,10 @@ export class GJFParser {
         }
       }
     }
-    
+
     // Parse route section
     const route = this.parseRoute(routeLine);
-    
+
     return {
       link0,
       route,
@@ -93,15 +93,15 @@ export class GJFParser {
       atoms
     };
   }
-  
+
   private parseRoute(routeLine: string): GaussianRoute {
     const parts = routeLine.slice(1).trim().split(/\s+/);
-    
+
     // First part is usually method/basis combination or separate
     let method = '';
     let basisSet = '';
     const options: string[] = [];
-    
+
     for (const part of parts) {
       if (part.includes('/')) {
         [method, basisSet] = part.split('/');
@@ -115,7 +115,7 @@ export class GJFParser {
         options.push(part);
       }
     }
-    
+
     return { method, basisSet, options };
   }
 }
