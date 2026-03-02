@@ -14,10 +14,20 @@ class TestGaussianServer:
         assert server.version == "0.1.0"
 
     def test_completion_feature(self):
-        """Test completion feature."""
+        """Test completion feature returns keywords."""
         from gaussian_lsp.server import completion
         result = completion(MagicMock())
-        assert result == []
+        # Should return a list of completion items
+        assert isinstance(result, list)
+        assert len(result) > 0
+        # Check first item has required fields
+        assert "label" in result[0]
+        assert "kind" in result[0]
+        # Check some expected keywords are present
+        labels = [item["label"] for item in result]
+        assert "B3LYP" in labels
+        assert "HF" in labels
+        assert "OPT" in labels
 
     def test_hover_feature(self):
         """Test hover feature."""

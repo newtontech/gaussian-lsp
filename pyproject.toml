@@ -54,9 +54,10 @@ addopts = "--cov=src/gaussian_lsp --cov-report=term-missing --cov-report=html --
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["src/gaussian_lsp"]
-omit = ["*/tests/*", "*/test_*"]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*", "*/__pycache__/*"]
 branch = true
+parallel = true
 
 [tool.coverage.report]
 exclude_lines = [
