@@ -1,6 +1,5 @@
 """Tests for Gaussian GJF parser."""
 
-
 import pytest
 
 from gaussian_lsp.parser.gjf_parser import (

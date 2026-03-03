@@ -1,4 +1,5 @@
 """Gaussian Language Server Protocol implementation."""
+
 from typing import List, Optional
 
 from lsprotocol import types
