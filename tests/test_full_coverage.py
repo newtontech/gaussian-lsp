@@ -2421,7 +2421,7 @@ class TestDefensiveCodePaths:
             assert any("Unknown element" in e for e in errors)
 
 
-class TestServerUncoveredLines:
+class TestServerUncoveredLinesFinal:
     """Tests for uncovered lines in server.py."""
 
     def test_hover_basis_set_return(self) -> None:

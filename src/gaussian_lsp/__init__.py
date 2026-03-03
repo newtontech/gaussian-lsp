@@ -1,6 +1,6 @@
 """Gaussian LSP package."""
 
-__version__ = "0.2.0"
+__version__ = "0.2.3"
 
 from gaussian_lsp.parser import (
     GaussianJob,
