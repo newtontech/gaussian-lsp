@@ -7,8 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Comprehensive documentation in docs/ directory
 - Example input files (water.gjf, ethane.gjf, methane.com, transition_state.gjf)
-- Additional test coverage tests (test_100_percent_coverage.py, test_exact_coverage.py)
-- Total test count: 234 tests
+- Additional test coverage tests (test_final_coverage.py, test_exact_branches.py)
+- Total test count: 247 tests
 
 ### Enhanced
 - Test coverage maintained at 97.34% (exceeds 93% requirement)
