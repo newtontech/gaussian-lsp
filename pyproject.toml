@@ -1,27 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "gaussian-lsp"
 version = "0.1.0"
-description = "Language Server Protocol for gaussian"
+description = "Language Server Protocol for Gaussian input files"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
 dependencies = [
-    "pygls>=1.2.0",
+    "pygls>=1.2.0,<2.0.0",
     "lsprotocol>=2023.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "black",
-    "ruff",
-    "mypy",
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "isort>=5.12.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+    "pre-commit>=3.0",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [project.scripts]
 gaussian-lsp = "gaussian_lsp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gaussian_lsp"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=src/gaussian_lsp --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=85 -v"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*", "*/__pycache__/*"]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "pass",
+    "..."
+]
+fail_under = 93
