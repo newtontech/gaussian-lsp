@@ -1,0 +1,12 @@
+%chk=ts_search.chk
+%mem=8GB
+%nproc=16
+
+# B3LYP/6-31G(d) opt=(ts,calcfc) freq
+
+Transition state for H2 + H -> H + H2
+
+0 2
+H   0.000000    0.000000    0.000000
+H   0.740000    0.000000    0.000000
+H   1.500000    0.000000    0.000000
