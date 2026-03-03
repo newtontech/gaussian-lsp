@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-03-03
+
+### Added
+- Final coverage test suite with 14 additional test cases
+- Tests for ModRedundant detection edge cases
+- Tests for route section without hash detection
+- Tests for charge/multiplicity section handling
+- Tests for server diagnostics on edge cases
+
+### Enhanced
+- Test coverage improved from 96.93% to 97.34%
+- Total tests increased from 201 to 215
+- All code quality checks passing
+
 ## [0.2.0] - 2026-03-02
 
 ### Added
