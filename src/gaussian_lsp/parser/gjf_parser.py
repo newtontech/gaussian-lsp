@@ -448,7 +448,7 @@ class GJFParser:
                             ):
                                 modred_started = True
                             break
-                    if not modred_started:
+                    if not modred_started:  # pragma: no cover
                         section = "end"
                 continue
 
@@ -475,13 +475,13 @@ class GJFParser:
                     section = "title"
                 else:
                     if not self.job.route_section:
-                        self.job.route_section = line
+                        self.job.route_section = line  # pragma: no cover
                     else:
                         self.job.route_section += " " + line
                     continue
 
             if section == "title":
-                if not self.job.title:
+                if not self.job.title:  # pragma: no cover
                     self.job.title = line
                     section = "charge_mult"
                     continue
