@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gaussian-lsp"
-version = "0.2.2"
+version = "0.2.8"
 description = "Language Server Protocol for Gaussian input files"
 readme = "README.md"
 license = {text = "MIT"}
@@ -70,4 +70,4 @@ exclude_lines = [
     "pass",
     "..."
 ]
-fail_under = 93
+fail_under = 100

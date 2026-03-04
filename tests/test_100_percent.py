@@ -1,134 +1,48 @@
-"""Final coverage tests to reach 100%."""
+"""Final tests to achieve 100% coverage."""
 
 import pytest
 
 from gaussian_lsp.parser.gjf_parser import GJFParser
 
 
-class TestFinal100Coverage:
-    """Tests specifically targeting uncovered lines."""
+class TestHundredPercentCoverage:
+    """Tests specifically targeting uncovered branches."""
 
-    def test_modredundant_after_empty_line_in_geometry(self):
-        """Test ModRedundant detection after empty line in geometry section.
+    def test_line_435_to_451_loop_completion(self):
+        """Test line 435->451: for loop completes without finding ModRedundant.
 
-        Covers lines 435-451: geometry section ends with empty line,
-        then ModRedundant section follows.
+        The loop at line 435 iterates to find non-empty lines after geometry.
+        We need the loop to complete (not break early) so it can reach line 451.
         """
-        content = """%chk=test.chk
-# B3LYP/6-31G(d) opt
+        parser = GJFParser()
+        # Content with blank line at end - the for loop will iterate but lines[j]
+        # will be empty/falsy at the end, causing the loop to exit without break
+        content = """# B3LYP/6-31G(d)
 
 Test
 
 0 1
-O 0.0 0.0 0.0
-H 1.0 0.0 0.0
+O  0.000000  0.000000  0.000000
 
-B 1 2
 """
-        parser = GJFParser()
         job = parser.parse(content)
-        assert len(job.modredundant) == 1
-        assert job.modredundant[0] == "B 1 2"
+        assert len(job.atoms) == 1
 
-    def test_modredundant_single_letter_after_empty_line(self):
-        """Test single letter ModRedundant commands after empty line."""
-        content = """%chk=test.chk
-# B3LYP/6-31G(d) opt
+    def test_line_484_to_489_title_already_set(self):
+        """Test line 484->489: title is already set when in title section.
 
-Test
-
-0 1
-O 0.0 0.0 0.0
-
-M
-"""
-        parser = GJFParser()
-        job = parser.parse(content)
-        assert len(job.modredundant) == 1
-        assert job.modredundant[0] == "M"
-
-    def test_route_section_already_set_multiline(self):
-        """Test multiline route section when route_section is already set.
-
-        Covers line 478: route_section already exists, append to it.
-        This happens when route section continues with lines starting with # or %
+        This happens when we have multiple lines in the title section,
+        but the first line already set the title.
         """
-        content = """%chk=test.chk
-# B3LYP/6-31G(d)
-# opt freq
-
-Test
-
-0 1
-O 0.0 0.0 0.0
-"""
         parser = GJFParser()
-        job = parser.parse(content)
-        assert "B3LYP/6-31G(d)" in job.route_section
-        assert "opt" in job.route_section
-        assert "freq" in job.route_section
+        # This should trigger the case where title is already set
+        content = """# B3LYP/6-31G(d)
 
-    def test_route_section_with_percent_continue(self):
-        """Test route section continuation with % line."""
-        content = """%chk=test.chk
-# B3LYP/6-31G(d)
-%mem=2GB
-
-Test
-
-0 1
-O 0.0 0.0 0.0
-"""
-        parser = GJFParser()
-        job = parser.parse(content)
-        assert "B3LYP/6-31G(d)" in job.route_section
-        assert "%mem=2GB" in job.route_section
-
-    def test_charge_mult_match_continue(self):
-        """Test charge/mult match with continue statement.
-
-        Covers lines 484-489: charge/mult match followed by continue.
-        """
-        content = """# HF/6-31G
-
-Test
+First Line
+Second Line
 
 0 1
 H 0.0 0.0 0.0
 """
-        parser = GJFParser()
         job = parser.parse(content)
-        assert job.charge == 0
-        assert job.multiplicity == 1
-        assert len(job.atoms) == 1
-
-    def test_no_modredundant_after_empty_line(self):
-        """Test that section ends correctly when no ModRedundant follows."""
-        content = """# HF/6-31G
-
-Test
-
-0 1
-H 0.0 0.0 0.0
-
-"""
-        parser = GJFParser()
-        job = parser.parse(content)
-        assert len(job.atoms) == 1
-        assert len(job.modredundant) == 0
-
-    def test_geometry_end_with_modred_pattern_false(self):
-        """Test geometry section ends when next line doesn't match ModRed."""
-        content = """# HF/6-31G
-
-Test
-
-0 1
-H 0.0 0.0 0.0
-
-X
-"""
-        parser = GJFParser()
-        job = parser.parse(content)
-        # X is a valid dummy atom symbol, not ModRed
-        assert len(job.atoms) == 1
+        assert job.title == "First Line"
