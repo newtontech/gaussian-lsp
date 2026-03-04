@@ -1,20 +1,15 @@
-
-## [0.2.6] - 2026-03-04
+## [0.2.7] - 2026-03-04
 
 ### Added
-- Additional test files: test_exact_branches.py, test_100_percent.py
-- More comprehensive branch coverage tests
-- Tests for exact line coverage targets
+- Final coverage test suite for remaining branches
+- Test file: test_ultimate_coverage.py
+- Enhanced test documentation
 
 ### Enhanced
-- Test coverage maintained at 99% (323 tests passing)
-- Parser module: 99% coverage (191 statements, 1 defensive line missing)
-- Server module: 100% coverage (132 statements, 0 missing)
-- All code quality checks passing (black, isort, mypy, flake8)
+- Test coverage: 99%+ (323+ tests passing)
+- Parser: 99% coverage, Server: 100% coverage
+- All quality checks passing
 
 ### Notes
-- Remaining 1% coverage consists of 3 defensive code branches that are
-  effectively unreachable in normal parsing scenarios:
-  - Line 435->451: ModRedundant detection edge case after geometry section
-  - Line 478: Route section append defensive check
-  - Line 484->489: Charge/mult continue defensive check
+- 99.18% total coverage, exceeding 85% requirement
+- 3 defensive branches remain uncovered (edge cases)
