@@ -12,7 +12,7 @@ class TestGaussianServer:
 
         assert server is not None
         assert server.name == "gaussian-lsp"
-        assert server.version == "0.2.2"
+        assert server.version == "0.2.10"
 
     def test_completion_feature(self):
         """Test completion feature returns keywords."""

@@ -14,7 +14,7 @@ from gaussian_lsp.parser.gjf_parser import (
     GJFParser,
 )
 
-server = LanguageServer("gaussian-lsp", "0.2.2")
+server = LanguageServer("gaussian-lsp", "0.2.10")
 
 
 # Documentation for keywords
