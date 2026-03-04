@@ -6,11 +6,11 @@
 
 ### Test Coverage
 - **Total Coverage**: 99% (328 statements, 1 missing, 3 branch misses)
-- **Tests Passing**: 323/323 (100%)
+- **Tests Passing**: 331/331 (100%)
 - **Coverage Breakdown** (Updated 2026-03-04):
   - `__init__.py`: 100%
   - `parser/__init__.py`: 100%
-  - `parser/gjf_parser.py`: 99% (1 statement, 3 branches missing)
+  - `parser/gjf_parser.py`: 99% (1 statement, 3 branches missing - defensive code)
   - `server.py`: 100%
 
 ### Code Quality
@@ -20,6 +20,10 @@
 - ✅ **flake8**: Linting passed (with line length 100)
 - ✅ **bandit**: Security check passed
 - ✅ **pre-commit**: All hooks passed
+
+### Version
+- **Current**: 0.2.8
+- **Previous**: 0.2.2
 
 ### Features Implemented
 1. **Gaussian Input File Parser** (.gjf, .com)
@@ -50,40 +54,41 @@
 - **Pull Requests**: 0 open (1 merged)
 
 ### Installation
-\`\`\`bash
+```bash
 pip install gaussian-lsp
-\`\`\`
+```
 
 ### Usage
-\`\`\`bash
+```bash
 gaussian-lsp
-\`\`\`
+```
 
 ### Development Setup
-\`\`\`bash
+```bash
 git clone https://github.com/newtontech/gaussian-lsp.git
 cd gaussian-lsp
 pip install -e ".[dev]"
 pytest tests/ --cov=src/gaussian_lsp --cov-report=html
-\`\`\`
+```
 
 ### Missing Coverage (1% - Defensive Code)
 The following code paths are defensive code that is difficult or impossible to test in normal usage:
 
 **gjf_parser.py**:
 - Line 435->451: ModRedundant detection loop completion (defensive branch)
-- Line 478: Route section append check (defensive - covered by other tests)
-- Line 484->489: Charge/mult continue branch (defensive - covered by other tests)
+- Line 478: Route section assignment in continuation block (defensive)
+- Line 484->489: Title section continue branch (defensive)
 
 These are defensive code paths that protect against edge cases. They are effectively unreachable in normal parsing scenarios but are kept as safeguards.
 
 ### Recent Updates (2026-03-04)
-1. ✅ Final test coverage improvements to 99%
-2. ✅ Added new test files: test_exact_branches.py, test_100_percent.py
-3. ✅ All 323 tests passing
-4. ✅ Code quality checks passing
-5. ✅ Updated CHANGELOG.md to version 0.2.6
-6. ✅ Documentation updated
+1. ✅ Version updated to 0.2.8
+2. ✅ Coverage requirement increased to 100%
+3. ✅ Added test_final_coverage.py with additional edge case tests
+4. ✅ All 331 tests passing
+5. ✅ Code quality checks passing
+6. ✅ Updated CHANGELOG.md
+7. ✅ Changes committed and pushed to GitHub
 
 ### Development Tasks Completed
 1. ✅ Checked GitHub issues and PRs (all closed/merged)
@@ -94,7 +99,7 @@ These are defensive code paths that protect against edge cases. They are effecti
    - Diagnostics
    - Formatting
 4. ✅ Unit test coverage at 99% (excellent coverage, 3 defensive branches remaining)
-5. ✅ Documentation updated (CHANGELOG.md, DEVELOPMENT_SUMMARY.md, docs/)
+5. ✅ Documentation updated (CHANGELOG.md, DEVELOPMENT_SUMMARY.md)
 6. ✅ Changes committed and pushed
 
 ### Project Summary
