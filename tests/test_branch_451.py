@@ -1,4 +1,5 @@
 """Test for branch 435->451 coverage."""
+
 from gaussian_lsp.parser.gjf_parser import GJFParser
 
 
