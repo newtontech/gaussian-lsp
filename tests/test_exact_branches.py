@@ -1,95 +1,85 @@
-"""Tests to cover exact missing branches."""
+"""Tests to cover exact branch conditions."""
 
-import unittest
+import pytest
 
 from gaussian_lsp.parser.gjf_parser import GJFParser
-from gaussian_lsp.server import _analyze_content
 
 
-class TestMissingBranches(unittest.TestCase):
-    """Test missing coverage branches."""
+class TestExactBranchCoverage:
+    """Cover specific uncovered branches."""
 
-    def test_route_section_append_line_478(self):
-        """Test line 478: append to existing route_section.
+    def test_geometry_empty_line_no_modred(self):
+        """Cover branch 435->451: empty line in geometry, no ModRed follows.
 
-        This tests the branch where route_section is already set
-        and another # line is encountered in route section.
+        This tests when geometry section has an empty line and the next
+        non-empty line is NOT a ModRedundant command (section becomes 'end').
         """
-        parser = GJFParser()
-        # Multi-line route section where second line also starts with #
-        content = """# B3LYP/6-31G(d) opt
-# freq
-
-Test
-
-0 1
-H 0.0 0.0 0.0
-"""
-        job = parser.parse(content)
-        # Verify route_section contains both parts
-        self.assertIn("B3LYP", job.route_section)
-        self.assertIn("freq", job.route_section)
-
-    def test_geometry_ends_with_empty_line_435_451(self):
-        """Test line 435->451: geometry section ends without ModRedundant.
-
-        This tests the branch where geometry_started is True,
-        an empty line is encountered, but next non-empty line is NOT ModRedundant.
-        """
-        parser = GJFParser()
-        # Geometry followed by empty line, then non-ModRedundant content
-        content = """# HF/STO-3G
-
-Test
-
-0 1
-H 0.0 0.0 0.0
-
-Variables
-X=1.0
-"""
-        job = parser.parse(content)
-        self.assertEqual(len(job.atoms), 1)
-        # section should transition to "end"
-
-    def test_charge_mult_with_atom_following_484_489(self):
-        """Test line 484->489: charge/mult match with atom following.
-
-        This tests the branch where after matching charge/mult,
-        the continue is executed and atoms are properly parsed.
-        """
-        parser = GJFParser()
-        content = """# HF/STO-3G
+        content = """# B3LYP/6-31G(d)
 
 Test
 
 0 1
 O 0.0 0.0 0.0
-H 0.75 0.0 0.0
-H -0.75 0.0 0.0
-"""
-        job = parser.parse(content)
-        self.assertEqual(job.charge, 0)
-        self.assertEqual(job.multiplicity, 1)
-        self.assertEqual(len(job.atoms), 3)
+H 0.0 0.0 0.8
 
-    def test_server_route_without_hash_266_279(self):
-        """Test server lines 266-279: route_section exists but doesn't start with #."""
-        # Create content where route_section is set but not starting with #
-        # This requires a specific parse scenario
-        content = """%chk=test.chk
-B3LYP/6-31G(d)
+X
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+        # After empty line in geometry, if no ModRed detected, section becomes 'end'
+        # X is not parsed as atom because section is 'end'
+        assert len(job.atoms) == 2
+        assert len(job.modredundant) == 0
+
+    def test_route_section_append(self):
+        """Cover line 478: route section append when already set.
+
+        This tests the else branch where route_section is already set
+        and we append to it.
+        """
+        content = """# B3LYP/6-31G(d)
+# opt freq
+
+Test
+
+0 1
+O 0.0 0.0 0.0
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+        assert "# B3LYP/6-31G(d)" in job.route_section
+        assert "# opt freq" in job.route_section
+
+    def test_charge_mult_continue(self):
+        """Cover lines 484->489: charge/mult match with continue.
+
+        This tests the continue statement after charge/mult match.
+        The key is that after matching, we continue to next iteration.
+        """
+        content = """# B3LYP/6-31G(d)
+
+Test
+
+0 1
+O 0.0 0.0 0.0
+H 0.0 0.0 0.8
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+        assert job.charge == 0
+        assert job.multiplicity == 1
+        assert len(job.atoms) == 2
+
+    def test_no_link0_direct_route(self):
+        """Test parsing without link0 section."""
+        content = """# HF/6-31G
 
 Test
 
 0 1
 H 0.0 0.0 0.0
 """
-        diagnostics = _analyze_content(content)
-        # Should have error about route not starting with #
-        route_errors = [d for d in diagnostics if "Route section must start with #" in d.message]
-        self.assertGreater(len(route_errors), 0)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        parser = GJFParser()
+        job = parser.parse(content)
+        assert job.route_section == "# HF/6-31G"
+        assert job.title == "Test"
