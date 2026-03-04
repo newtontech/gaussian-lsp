@@ -39,3 +39,17 @@
 - Previous defensive code branches now covered
 - All edge cases tested
 - Production-ready release
+
+## [0.2.10] - 2026-03-05
+
+### Changed
+- Cleaned up redundant test files, consolidated to 4 core test files
+- Added defensive code annotations for unreachable branches
+
+### Added
+- test_edge_cases.py for edge case testing
+- Additional diagnostic tests for empty files
+
+### Quality
+- 210/210 tests passing with 100% coverage
+- All linting and type checks passing

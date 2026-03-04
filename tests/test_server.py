@@ -274,3 +274,59 @@ class TestKeywordDocs:
         for keyword, doc in KEYWORD_DOCS.items():
             assert len(doc) > 0
             assert isinstance(doc, str)
+
+
+class TestDiagnosticEdgeCases:
+    """Test diagnostic edge cases for 100% coverage."""
+
+    def test_diagnostic_empty_file_with_only_comments_and_link0(self):
+        """Test diagnostic with file containing only comments and link0."""
+        from gaussian_lsp.server import _analyze_content
+
+        # File with only comments and link0, no route section
+        content = """%chk=test.chk
+! This is a comment
+%mem=1GB
+! Another comment
+"""
+        diagnostics = _analyze_content(content)
+
+        # Should have error about missing route
+        error_msgs = [d.message for d in diagnostics]
+        assert any("Missing route section" in msg for msg in error_msgs)
+
+    def test_diagnostic_route_not_starting_with_hash(self):
+        """Test diagnostic with route section not starting with #."""
+        from gaussian_lsp.server import _analyze_content
+
+        # Route section without leading # (will be parsed but flagged)
+        content = """B3LYP/6-31G(d) opt
+
+Test
+
+0 1
+O 0.0 0.0 0.0
+"""
+        diagnostics = _analyze_content(content)
+
+        # Should have diagnostics about route section
+        assert len(diagnostics) > 0
+
+    def test_diagnostic_with_link0_no_route(self):
+        """Test diagnostic with link0 commands but no route."""
+        from gaussian_lsp.server import _analyze_content
+
+        content = """%chk=test.chk
+%mem=1GB
+%nproc=4
+
+Test
+
+0 1
+H 0.0 0.0 0.0
+"""
+        diagnostics = _analyze_content(content)
+
+        # Should have error about missing route
+        error_msgs = [d.message for d in diagnostics]
+        assert any("route" in msg.lower() for msg in error_msgs)

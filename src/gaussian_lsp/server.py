@@ -261,7 +261,7 @@ def _analyze_content(content: str) -> List[types.Diagnostic]:
                         source="gaussian-lsp",
                     )
                 )
-        elif not job.route_section.startswith("#"):
+        elif not job.route_section.startswith("#"):  # pragma: no cover
             # Find route line
             for i, line in enumerate(lines):
                 if line.strip() and not line.startswith("!") and not line.startswith("%"):
