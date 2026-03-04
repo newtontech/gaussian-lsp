@@ -463,7 +463,7 @@ class GJFParser:
                     continue
                 elif line.startswith("#"):
                     # This is the route section
-                    self.job.route_section = line  # pragma: no cover
+                    self.job.route_section = line
                     section = "route"
                     continue
                 else:
@@ -481,7 +481,7 @@ class GJFParser:
                     continue
 
             if section == "title":
-                if not self.job.title:  # pragma: no cover
+                if not self.job.title:
                     self.job.title = line
                     section = "charge_mult"
                     continue

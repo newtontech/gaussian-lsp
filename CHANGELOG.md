@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.5] - 2026-03-04
+
+### Added
+- New test files: test_final_100.py, test_defensive.py, test_direct_coverage.py
+- Additional edge case tests for defensive code paths
+- Tests for complex input scenarios with all sections
+
+### Enhanced
+- Test coverage improved to 99% (target: 100%)
+- Total test count: 309 tests (all passing)
+- Removed pragma: no cover annotations from defensive code
+- Code quality maintained with all checks passing
+
+
 ## [0.2.3] - 2026-03-03
 
 ### Added
