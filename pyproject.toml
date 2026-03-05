@@ -50,7 +50,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=src/gaussian_lsp --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=85 -v"
+addopts = "--cov=src/gaussian_lsp --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=100 -v"
 asyncio_mode = "auto"
 
 [tool.coverage.run]
