@@ -1,3 +1,15 @@
+## [0.2.11] - 2026-03-05
+
+### Changed
+- Code formatted with Black for consistent style
+- All imports sorted with isort
+
+### Quality
+- 210/210 tests passing with 100% coverage
+- All linting checks passing (black, isort, flake8)
+- Type checking passing (mypy)
+- Security checks passing (bandit)
+
 ## [0.2.8] - 2026-03-04
 
 ### Changed
