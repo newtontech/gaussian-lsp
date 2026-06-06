@@ -2077,6 +2077,20 @@ Test
 class TestFinalBranchCoverage:
     """Tests for final missing branch coverage."""
 
+    def test_parser_blank_line_before_first_atom(self) -> None:
+        """Test blank line in geometry section before the first atom."""
+        content = """# B3LYP/6-31G(d)
+
+Test
+
+0 1
+
+H 0.0 0.0 0.0
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+        assert len(job.atoms) == 1
+
     def test_parser_blank_line_no_more_lines(self) -> None:
         """Test blank line at end of geometry with no more lines."""
         # Cover branch 435->451: for loop completes without break
