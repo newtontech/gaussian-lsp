@@ -41,7 +41,8 @@ jobs:
 
     - name: Check Python dependencies for known vulnerabilities
       run: |
-        pip-audit
+        printf '%s\n' 'pygls>=1.2.0,<2.0.0' 'lsprotocol>=2023.0.0' > audit-requirements.txt
+        pip-audit -r audit-requirements.txt
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
