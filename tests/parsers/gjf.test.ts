@@ -1,4 +1,4 @@
-import { GJFParser, GaussianInput } from '../../src/parsers/gjf';
+import { GJFParser } from '../../src/parsers/gjf';
 
 describe('GJFParser', () => {
   let parser: GJFParser;
@@ -73,6 +73,22 @@ H -0.504 -0.873 0.000
     expect(result.route.options).toContain('scrf=solvent=water');
   });
 
+  it('should parse route with method and basis as separate tokens', () => {
+    const input = `# HF STO-3G freq
+
+Separate route tokens
+
+0 1
+He 0.000 0.000 0.000
+`;
+
+    const result = parser.parse(input);
+
+    expect(result.route.method).toBe('HF');
+    expect(result.route.basisSet).toBe('STO-3G');
+    expect(result.route.options).toContain('freq');
+  });
+
   it('should handle ions with non-zero charge', () => {
     const input = `# PM6
 
@@ -88,5 +104,37 @@ H 0.970 0.000 0.000
     expect(result.charge).toBe(0);
     expect(result.multiplicity).toBe(2);
     expect(result.atoms).toHaveLength(2);
+  });
+
+  it('should parse negative signed charge', () => {
+    const input = `# B3LYP/6-31G(d)
+
+Anion doublet
+
+-1 2
+O 0.000 0.000 0.000
+`;
+
+    const result = parser.parse(input);
+
+    expect(result.charge).toBe(-1);
+    expect(result.multiplicity).toBe(2);
+    expect(result.atoms).toHaveLength(1);
+  });
+
+  it('should parse positive signed charge', () => {
+    const input = `# B3LYP/6-31G(d)
+
+Cation singlet
+
++1 1
+Na 0.000 0.000 0.000
+`;
+
+    const result = parser.parse(input);
+
+    expect(result.charge).toBe(1);
+    expect(result.multiplicity).toBe(1);
+    expect(result.atoms).toHaveLength(1);
   });
 });

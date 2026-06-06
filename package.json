@@ -1,0 +1,15 @@
+{
+  "name": "gaussian-lsp",
+  "version": "0.2.11",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:ts": "vitest run",
+    "test:ts:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

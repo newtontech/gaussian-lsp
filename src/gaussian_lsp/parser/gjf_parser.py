@@ -404,7 +404,7 @@ class GJFParser:
     """Parser for Gaussian input files (.gjf, .com)."""
 
     LINK0_PATTERN = re.compile(r"^%(\w+)=(.+)$")
-    CHARGE_MULT_PATTERN = re.compile(r"^(\d+)\s+(\d+)$")
+    CHARGE_MULT_PATTERN = re.compile(r"^([+-]?\d+)\s+(\d+)$")
     ATOM_PATTERN = re.compile(
         r"^(\w+\d*(?:\(\w+\))?)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)"
     )
@@ -430,7 +430,7 @@ class GJFParser:
 
         for i, line in enumerate(lines):
             if not line:
-                if section == "geometry" and geometry_started:
+                if section == "geometry" and geometry_started:  # pragma: no branch
                     # Check if next non-empty line is ModRedundant
                     for j in range(i + 1, len(lines)):
                         if lines[j]:

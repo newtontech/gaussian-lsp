@@ -54,7 +54,17 @@ pip install -e ".[dev]"
 ### Running Tests
 
 ```bash
-pytest tests/ --cov=src/gaussian_lsp --cov-report=html
+pip install -e ".[dev]"
+python -m pytest
+npm ci
+npm run test:ts
+```
+
+If your local Python environment is not set up yet, you can reproduce the Python
+suite without modifying the project environment:
+
+```bash
+uv run --with pytest --with pytest-asyncio --with pytest-cov python -m pytest
 ```
 
 ### Code Quality
@@ -64,7 +74,11 @@ black src/ tests/
 isort src/ tests/
 mypy src/
 flake8 src/ tests/
+pre-commit run --all-files
 ```
+
+See `docs/pr-review-workflow.md` for the merge/modify/hold PR review process
+and the parallel Codex subagent review lanes.
 
 ## Supported Keywords
 
