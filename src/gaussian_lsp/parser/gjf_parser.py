@@ -404,7 +404,7 @@ class GJFParser:
     """Parser for Gaussian input files (.gjf, .com)."""
 
     LINK0_PATTERN = re.compile(r"^%(\w+)=(.+)$")
-    CHARGE_MULT_PATTERN = re.compile(r"^(\d+)\s+(\d+)$")
+    CHARGE_MULT_PATTERN = re.compile(r"^([+-]?\d+)\s+(\d+)$")
     ATOM_PATTERN = re.compile(
         r"^(\w+\d*(?:\(\w+\))?)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)"
     )

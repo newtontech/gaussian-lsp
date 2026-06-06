@@ -195,6 +195,38 @@ H -0.757160  0.586260  0.000000
         assert job.atoms[1][0] == "H"
         assert abs(job.atoms[1][1] - 0.757160) < 0.0001
 
+    def test_parse_signed_charge(self):
+        """Test parsing charge/multiplicity lines with explicit signs."""
+        content = """# B3LYP/6-31G(d)
+
+Anion doublet
+
+-1 2
+O 0.0 0.0 0.0
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+
+        assert job.charge == -1
+        assert job.multiplicity == 2
+        assert len(job.atoms) == 1
+
+    def test_parse_positive_signed_charge(self):
+        """Test parsing charge/multiplicity lines with an explicit plus sign."""
+        content = """# B3LYP/6-31G(d)
+
+Cation singlet
+
++1 1
+Na 0.0 0.0 0.0
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+
+        assert job.charge == 1
+        assert job.multiplicity == 1
+        assert len(job.atoms) == 1
+
     def test_parse_with_comments(self):
         """Test parsing GJF with comments."""
         content = """! This is a comment
