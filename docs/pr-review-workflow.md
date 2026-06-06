@@ -52,10 +52,8 @@ Reason:
 Required follow-up:
 ```
 
-## Current Baseline
+## Baseline Records
 
-As of 2026-06-06, PR #22 (`fix: parse signed Gaussian charges`) is
-merge-ready pending explicit approval. GitHub CI passed on Python 3.9, 3.10,
-3.11, and 3.12, and the branch is cleanly mergeable. The remaining workflow
-gap was TypeScript parser coverage for signed charges; the local workflow now
-adds Vitest coverage so a follow-up CI run can enforce that gap before merge.
+Keep point-in-time PR status in the PR description, review comments, or a dated
+maintenance note. This workflow should stay limited to reusable review rules so
+it does not go stale after a PR is merged, rebased, or closed.

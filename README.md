@@ -56,7 +56,7 @@ pip install -e ".[dev]"
 ```bash
 pip install -e ".[dev]"
 python -m pytest
-npm install
+npm ci
 npm run test:ts
 ```
 
