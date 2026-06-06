@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
+  python-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,18 +30,18 @@ jobs:
       run: |
         pre-commit run --all-files
 
-    - name: Run tests with 100% coverage
+    - name: Run Python tests with configured coverage
       run: |
-        pytest --cov=src --cov-report=term-missing --cov-report=html --cov-fail-under=95
+        python -m pytest
 
     - name: Run security scan with bandit
       run: |
         bandit -r src/ -f json -o bandit-report.json || true
         bandit -r src/
 
-    - name: Check dependencies for known vulnerabilities
+    - name: Check Python dependencies for known vulnerabilities
       run: |
-        safety check || true
+        pip-audit
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -57,3 +57,22 @@ jobs:
         name: coverage-report-${{ matrix.python-version }}
         path: htmlcov/
         if-no-files-found: ignore
+
+  typescript-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install TypeScript test dependencies
+      run: |
+        npm ci
+
+    - name: Run TypeScript parser tests
+      run: |
+        npm run test:ts:coverage
