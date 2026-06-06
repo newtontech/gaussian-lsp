@@ -8,11 +8,12 @@ class TestGaussianServer:
 
     def test_server_exists(self):
         """Test server instance exists."""
+        from gaussian_lsp import __version__
         from gaussian_lsp.server import server
 
         assert server is not None
         assert server.name == "gaussian-lsp"
-        assert server.version == "0.2.11"
+        assert server.version == __version__
 
     def test_completion_feature(self):
         """Test completion feature returns keywords."""

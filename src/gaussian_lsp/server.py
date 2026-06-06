@@ -5,6 +5,7 @@ from typing import List, Optional
 from lsprotocol import types
 from pygls.server import LanguageServer
 
+from gaussian_lsp import __version__
 from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
     GAUSSIAN_JOB_TYPES,
@@ -14,7 +15,7 @@ from gaussian_lsp.parser.gjf_parser import (
     GJFParser,
 )
 
-server = LanguageServer("gaussian-lsp", "0.2.11")
+server = LanguageServer("gaussian-lsp", __version__)
 
 
 # Documentation for keywords

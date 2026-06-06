@@ -4,7 +4,6 @@ Language Server Protocol implementation for Gaussian quantum chemistry software.
 
 ## Features
 
-- **Syntax highlighting** for `.gjf` and `.com` files
 - **Auto-completion** for Gaussian keywords (methods, basis sets, job types)
 - **Diagnostics** with error and warning detection
 - **Hover documentation** for Gaussian keywords
@@ -28,15 +27,14 @@ Start the language server:
 gaussian-lsp
 ```
 
-### VS Code Integration
+### Editor Integration
 
-Add to your VS Code settings:
+This package provides the language server executable. To use it in an editor,
+connect an LSP client to the `gaussian-lsp` command and register `.gjf` and
+`.com` files as Gaussian input files. The repository does not currently ship a
+VS Code extension or TextMate grammar.
 
-```json
-{
-  "languageServerExample.trace.server": "verbose"
-}
-```
+Syntax highlighting depends on your editor or extension setup.
 
 ### Supported File Extensions
 

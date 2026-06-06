@@ -1,9 +1,13 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+dist/
+uv.lock
 .pytest_cache/
 .coverage
+coverage.xml
 coverage/
+htmlcov/
 *.vsix
 node_modules/
 .vscode/

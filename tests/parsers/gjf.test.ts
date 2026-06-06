@@ -137,4 +137,59 @@ Na 0.000 0.000 0.000
     expect(result.multiplicity).toBe(1);
     expect(result.atoms).toHaveLength(1);
   });
+
+  it('should parse route continuation lines without repeated hash marks', () => {
+    const input = `# opt freq
+B3LYP/6-31G(d) scrf=(solvent=water)
+
+Continuation route
+
+0 1
+O 0.000 0.000 0.000
+H 0.000 0.000 0.900
+`;
+
+    const result = parser.parse(input);
+
+    expect(result.route.method).toBe('B3LYP');
+    expect(result.route.basisSet).toBe('6-31G(d)');
+    expect(result.route.options).toContain('opt');
+    expect(result.route.options).toContain('freq');
+    expect(result.route.options).toContain('scrf=(solvent=water)');
+    expect(result.title).toBe('Continuation route');
+    expect(result.atoms).toHaveLength(2);
+  });
+
+  it('should parse scientific notation coordinates', () => {
+    const input = `# B3LYP/6-31G(d)
+
+Scientific coordinates
+
+0 1
+O +1.0E-03 -.250 1.
+H -7.57160e-01 5.86260E-01 .000000
+`;
+
+    const result = parser.parse(input);
+
+    expect(result.atoms).toHaveLength(2);
+    expect(result.atoms[0]).toMatchObject({ element: 'O', x: 0.001, y: -0.25, z: 1 });
+    expect(result.atoms[1]).toMatchObject({ element: 'H', x: -0.75716, y: 0.58626, z: 0 });
+  });
+
+  it('should keep slash-bearing basis set suffixes', () => {
+    const input = `# B3LYP/def2-TZVP/J opt
+
+Density fitting basis
+
+0 1
+He 0.000 0.000 0.000
+`;
+
+    const result = parser.parse(input);
+
+    expect(result.route.method).toBe('B3LYP');
+    expect(result.route.basisSet).toBe('def2-TZVP/J');
+    expect(result.route.options).toContain('opt');
+  });
 });
