@@ -1,7 +1,7 @@
 """Gaussian Language Server Protocol implementation."""
 
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from lsprotocol import types
 from pygls.server import LanguageServer
@@ -391,7 +391,7 @@ def _looks_like_route_continuation(line: str) -> bool:
 
 def _geometry_line_indexes(lines: List[str], charge_line: Optional[int]) -> List[int]:
     """Return likely geometry line indexes."""
-    indexes = []
+    indexes: List[int] = []
     if charge_line is None:
         return indexes
 
@@ -512,11 +512,16 @@ def _append_link0_value_diagnostics(diagnostics: List[types.Diagnostic], lines: 
                 )
             )
         elif key_lower == "mem":
-            if not re.match(r"^[1-9]\d*(?:\.\d+)?\s*(KB|MB|GB|TB|KW|MW|GW|TW)?$", value, re.I):
+            if not re.match(
+                r"^[1-9]\d*(?:\.\d+)?\s*(KB|MB|GB|TB|KW|MW|GW|TW)?$",
+                value,
+                re.I,
+            ):
                 diagnostics.append(
                     _make_diagnostic(
                         i,
-                        "%mem value should include a positive number and optional unit like MB or GB.",
+                        "%mem value should include a positive number and optional "
+                        "unit like MB or GB.",
                         types.DiagnosticSeverity.Error,
                         len(line),
                     )
@@ -556,7 +561,10 @@ def _append_route_semantic_diagnostics(
         if typo in route_upper:
             diagnostics.append(
                 _make_diagnostic(
-                    route_line, hint, types.DiagnosticSeverity.Error, len(lines[route_line])
+                    route_line,
+                    hint,
+                    types.DiagnosticSeverity.Error,
+                    len(lines[route_line]),
                 )
             )
 
@@ -584,7 +592,8 @@ def _append_chemistry_diagnostics(
         diagnostics.append(
             _make_diagnostic(
                 line,
-                "Charge/multiplicity electron count parity mismatch; check total electrons and spin multiplicity.",
+                "Charge/multiplicity electron count parity mismatch; "
+                "check total electrons and spin multiplicity.",
                 types.DiagnosticSeverity.Error,
                 len(lines[line]) if lines else 1,
             )
@@ -614,7 +623,8 @@ def _append_basis_diagnostics(
         diagnostics.append(
             _make_diagnostic(
                 route_line,
-                "Gen basis set is requested, but no custom basis section with **** delimiters was found.",
+                "Gen basis set is requested, but no custom basis section with **** "
+                "delimiters was found.",
                 types.DiagnosticSeverity.Error,
                 len(lines[route_line]),
             )
@@ -626,7 +636,8 @@ def _append_basis_diagnostics(
             diagnostics.append(
                 _make_diagnostic(
                     route_line,
-                    "GenECP is requested, but no separate ECP block was found after the basis section.",
+                    "GenECP is requested, but no separate ECP block was found "
+                    "after the basis section.",
                     types.DiagnosticSeverity.Error,
                     len(lines[route_line]),
                 )
@@ -665,7 +676,8 @@ def _append_basis_diagnostics(
                     diagnostics.append(
                         _make_diagnostic(
                             line_index,
-                            f"Custom basis references {center_element}, but geometry has no {center_element} atoms.",
+                            f"Custom basis references {center_element}, but geometry "
+                            f"has no {center_element} atoms.",
                             types.DiagnosticSeverity.Error,
                             len(lines[line_index]),
                         )
@@ -680,7 +692,8 @@ def _append_basis_diagnostics(
             diagnostics.append(
                 _make_diagnostic(
                     route_line,
-                    "ECP basis set is usually intended for heavier elements; check whether this basis is appropriate.",
+                    "ECP basis set is usually intended for heavier elements; "
+                    "check whether this basis is appropriate.",
                     types.DiagnosticSeverity.Warning,
                     len(lines[route_line]),
                 )
@@ -703,7 +716,8 @@ def _append_geometry_diagnostics(
             diagnostics.append(
                 _make_diagnostic(
                     i,
-                    "Invalid coordinate line; expected 'Element X Y Z' with three numeric coordinates.",
+                    "Invalid coordinate line; expected 'Element X Y Z' with three "
+                    "numeric coordinates.",
                     types.DiagnosticSeverity.Error,
                     len(lines[i]),
                 )
@@ -725,7 +739,8 @@ def _append_geometry_diagnostics(
             diagnostics.append(
                 _make_diagnostic(
                     i,
-                    f"ModRedundant {command} command expects {expected_atoms} integer atom indexes.",
+                    f"ModRedundant {command} command expects {expected_atoms} "
+                    "integer atom indexes.",
                     types.DiagnosticSeverity.Error,
                     len(line),
                 )
@@ -736,7 +751,8 @@ def _append_geometry_diagnostics(
                 diagnostics.append(
                     _make_diagnostic(
                         i,
-                        f"ModRedundant command references atom {atom_ref}, but geometry has {atom_count} atoms.",
+                        f"ModRedundant command references atom {atom_ref}, but "
+                        f"geometry has {atom_count} atoms.",
                         types.DiagnosticSeverity.Error,
                         len(line),
                     )
@@ -754,7 +770,8 @@ def _append_geometry_diagnostics(
                 diagnostics.append(
                     _make_diagnostic(
                         charge_line + 1 if charge_line is not None else 0,
-                        f"Atoms {first_element} and {second_element} are very close; Gaussian may fail after running.",
+                        f"Atoms {first_element} and {second_element} are very close; "
+                        "Gaussian may fail after running.",
                         types.DiagnosticSeverity.Warning,
                         1,
                     )
@@ -772,7 +789,7 @@ def _append_zmatrix_diagnostics(
     if not geometry_indexes:
         return
 
-    variable_refs = set()
+    variable_refs: Set[str] = set()
     has_zmatrix_line = False
     for i in geometry_indexes:
         stripped = lines[i].strip()
@@ -787,7 +804,8 @@ def _append_zmatrix_diagnostics(
             diagnostics.append(
                 _make_diagnostic(
                     i,
-                    "Mixed Cartesian/Z-matrix coordinate line; use either 3 Cartesian numbers or valid Z-matrix fields.",
+                    "Mixed Cartesian/Z-matrix coordinate line; use either 3 Cartesian "
+                    "numbers or valid Z-matrix fields.",
                     types.DiagnosticSeverity.Error,
                     len(lines[i]),
                 )
@@ -813,7 +831,7 @@ def _append_zmatrix_diagnostics(
     if not has_zmatrix_line:
         return
 
-    variable_defs = set()
+    variable_defs: Set[str] = set()
     for i, line in _post_geometry_lines(lines, charge_line):
         if "=" not in line:
             continue
@@ -831,13 +849,13 @@ def _append_zmatrix_diagnostics(
         variable_defs.add(name)
 
     for variable in sorted(variable_refs - variable_defs):
-        line = geometry_indexes[-1]
+        line_index = geometry_indexes[-1]
         diagnostics.append(
             _make_diagnostic(
-                line,
+                line_index,
                 f"Undefined Z-matrix variable: {variable}.",
                 types.DiagnosticSeverity.Error,
-                len(lines[line]),
+                len(lines[line_index]),
             )
         )
 

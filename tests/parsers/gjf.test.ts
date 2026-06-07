@@ -192,4 +192,28 @@ He 0.000 0.000 0.000
     expect(result.route.basisSet).toBe('def2-TZVP/J');
     expect(result.route.options).toContain('opt');
   });
+
+  it('should reject invalid charge and multiplicity fields', () => {
+    const input = `# B3LYP/6-31G(d)
+
+Invalid charge
+
+neutral singlet
+O 0.000 0.000 0.000
+`;
+
+    expect(() => parser.parse(input)).toThrow('Invalid charge/multiplicity line');
+  });
+
+  it('should reject invalid coordinate fields', () => {
+    const input = `# B3LYP/6-31G(d)
+
+Invalid coordinate
+
+0 1
+O x 0.000 0.000
+`;
+
+    expect(() => parser.parse(input)).toThrow('Invalid coordinate line');
+  });
 });

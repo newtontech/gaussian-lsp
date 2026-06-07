@@ -73,8 +73,13 @@ export class GJFParser {
       // Charge and multiplicity
       if (section === 'charge') {
         const parts = line.split(/\s+/);
-        charge = parseInt(parts[0]);
-        multiplicity = parseInt(parts[1]);
+        const parsedCharge = Number.parseInt(parts[0], 10);
+        const parsedMultiplicity = Number.parseInt(parts[1], 10);
+        if (!Number.isFinite(parsedCharge) || !Number.isFinite(parsedMultiplicity)) {
+          throw new Error(`Invalid charge/multiplicity line: ${line}`);
+        }
+        charge = parsedCharge;
+        multiplicity = parsedMultiplicity;
         section = 'geometry';
         continue;
       }
@@ -83,11 +88,17 @@ export class GJFParser {
       if (section === 'geometry') {
         const parts = line.split(/\s+/);
         if (parts.length >= 4) {
+          const x = Number.parseFloat(parts[1]);
+          const y = Number.parseFloat(parts[2]);
+          const z = Number.parseFloat(parts[3]);
+          if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+            throw new Error(`Invalid coordinate line: ${line}`);
+          }
           atoms.push({
             element: parts[0],
-            x: parseFloat(parts[1]),
-            y: parseFloat(parts[2]),
-            z: parseFloat(parts[3])
+            x,
+            y,
+            z
           });
         }
       }

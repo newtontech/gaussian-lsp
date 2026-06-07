@@ -563,7 +563,9 @@ class GJFParser:
                 element_cap = (
                     element.capitalize()
                     if len(element) == 1
-                    else element[:1].upper() + element[1:].lower() if len(element) > 1 else element
+                    else element[:1].upper() + element[1:].lower()
+                    if len(element) > 1
+                    else element
                 )
                 if element_cap not in VALID_ELEMENTS and not element.isdigit():
                     errors.append(f"Unknown element: {atom[0]}")
