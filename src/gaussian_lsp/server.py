@@ -1,6 +1,7 @@
 """Gaussian Language Server Protocol implementation."""
 
-from typing import List, Optional
+import re
+from typing import Dict, List, Optional, Tuple
 
 from lsprotocol import types
 from pygls.server import LanguageServer
@@ -66,6 +67,141 @@ KEYWORD_DOCS = {
     "CIS": "Configuration Interaction Singles. Excited state method.",
     "COUNTERPOISE": "Counterpoise correction for basis set superposition error.",
     "ONIOM": "N-layered Integrated molecular Orbital and Mechanics.",
+}
+
+ELEMENT_ATOMIC_NUMBERS: Dict[str, int] = {
+    "H": 1,
+    "He": 2,
+    "Li": 3,
+    "Be": 4,
+    "B": 5,
+    "C": 6,
+    "N": 7,
+    "O": 8,
+    "F": 9,
+    "Ne": 10,
+    "Na": 11,
+    "Mg": 12,
+    "Al": 13,
+    "Si": 14,
+    "P": 15,
+    "S": 16,
+    "Cl": 17,
+    "Ar": 18,
+    "K": 19,
+    "Ca": 20,
+    "Sc": 21,
+    "Ti": 22,
+    "V": 23,
+    "Cr": 24,
+    "Mn": 25,
+    "Fe": 26,
+    "Co": 27,
+    "Ni": 28,
+    "Cu": 29,
+    "Zn": 30,
+    "Ga": 31,
+    "Ge": 32,
+    "As": 33,
+    "Se": 34,
+    "Br": 35,
+    "Kr": 36,
+    "Rb": 37,
+    "Sr": 38,
+    "Y": 39,
+    "Zr": 40,
+    "Nb": 41,
+    "Mo": 42,
+    "Tc": 43,
+    "Ru": 44,
+    "Rh": 45,
+    "Pd": 46,
+    "Ag": 47,
+    "Cd": 48,
+    "In": 49,
+    "Sn": 50,
+    "Sb": 51,
+    "Te": 52,
+    "I": 53,
+    "Xe": 54,
+    "Cs": 55,
+    "Ba": 56,
+    "La": 57,
+    "Ce": 58,
+    "Pr": 59,
+    "Nd": 60,
+    "Pm": 61,
+    "Sm": 62,
+    "Eu": 63,
+    "Gd": 64,
+    "Tb": 65,
+    "Dy": 66,
+    "Ho": 67,
+    "Er": 68,
+    "Tm": 69,
+    "Yb": 70,
+    "Lu": 71,
+    "Hf": 72,
+    "Ta": 73,
+    "W": 74,
+    "Re": 75,
+    "Os": 76,
+    "Ir": 77,
+    "Pt": 78,
+    "Au": 79,
+    "Hg": 80,
+    "Tl": 81,
+    "Pb": 82,
+    "Bi": 83,
+    "Po": 84,
+    "At": 85,
+    "Rn": 86,
+    "Fr": 87,
+    "Ra": 88,
+    "Ac": 89,
+    "Th": 90,
+    "Pa": 91,
+    "U": 92,
+    "Np": 93,
+    "Pu": 94,
+    "Am": 95,
+    "Cm": 96,
+    "Bk": 97,
+    "Cf": 98,
+    "Es": 99,
+    "Fm": 100,
+    "Md": 101,
+    "No": 102,
+    "Lr": 103,
+    "Rf": 104,
+    "Db": 105,
+    "Sg": 106,
+    "Bh": 107,
+    "Hs": 108,
+    "Mt": 109,
+    "Ds": 110,
+    "Rg": 111,
+    "Cn": 112,
+    "Nh": 113,
+    "Fl": 114,
+    "Mc": 115,
+    "Lv": 116,
+    "Ts": 117,
+    "Og": 118,
+}
+
+CHARGE_MULT_PATTERN = re.compile(r"^[+-]?\d+\s+\d+$")
+INT_START_PATTERN = re.compile(r"^[+-]?\d+\b")
+SIMPLE_NUMBER_PATTERN = re.compile(r"^[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[Ee][+-]?\d+)?$")
+ZMATRIX_VARIABLE_PATTERN = re.compile(r"^[A-Za-z]\w*$")
+MODRED_ATOM_COUNTS = {"B": 2, "A": 3, "D": 4, "L": 3}
+ECP_BASIS_MARKERS = ("LANL2DZ", "LANL2MB", "SDD", "DEF2-ECP")
+ROUTE_TYPO_HINTS = {
+    "FREQENCY": "Use freq instead of freqency.",
+    "OPTIMIZE": "Use opt instead of optimize.",
+    "M06-2X": "Use M062X instead of M06-2X.",
+    "631G": "Did you mean 6-31G?",
+    "NPROCSHARED": "Use %nprocshared as a Link0 command, not a route keyword.",
 }
 
 
@@ -198,6 +334,512 @@ def formatting(params: types.DocumentFormattingParams) -> List[types.TextEdit]:
             new_text=formatted,
         )
     ]
+
+
+def _make_diagnostic(
+    line: int, message: str, severity: types.DiagnosticSeverity, character: int = 0
+) -> types.Diagnostic:
+    """Create a gaussian-lsp diagnostic at a single line."""
+    return types.Diagnostic(
+        range=types.Range(
+            start=types.Position(line=max(line, 0), character=0),
+            end=types.Position(line=max(line, 0), character=max(character, 1)),
+        ),
+        message=message,
+        severity=severity,
+        source="gaussian-lsp",
+    )
+
+
+def _canonical_element(element: str) -> str:
+    """Normalize a Gaussian element token to an element symbol."""
+    clean = element.split("(")[0]
+    return clean[:1].upper() + clean[1:].lower() if clean else clean
+
+
+def _find_route_line(lines: List[str]) -> Optional[int]:
+    """Find the first route line."""
+    for i, line in enumerate(lines):
+        if line.strip().startswith("#"):
+            return i
+    return None
+
+
+def _find_charge_line(lines: List[str]) -> Optional[Tuple[int, int, int]]:
+    """Find charge/multiplicity line and return index, charge, multiplicity."""
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if CHARGE_MULT_PATTERN.match(stripped):
+            charge, multiplicity = stripped.split()[:2]
+            return i, int(charge), int(multiplicity)
+    return None
+
+
+def _looks_like_route_continuation(line: str) -> bool:
+    """Return whether a non-empty line plausibly continues a route section."""
+    upper = line.upper()
+    return (
+        line.strip().startswith("#")
+        or "/" in line
+        or "=" in line
+        or "(" in line
+        or any(method.upper() in upper for method in GAUSSIAN_METHODS)
+        or any(basis.upper() in upper for basis in GAUSSIAN_BASIS_SETS)
+        or any(job_type.upper() in upper for job_type in GAUSSIAN_JOB_TYPES)
+    )
+
+
+def _geometry_line_indexes(lines: List[str], charge_line: Optional[int]) -> List[int]:
+    """Return likely geometry line indexes."""
+    indexes = []
+    if charge_line is None:
+        return indexes
+
+    for i in range(charge_line + 1, len(lines)):
+        stripped = lines[i].strip()
+        if stripped:
+            indexes.append(i)
+        elif indexes:
+            break
+    return indexes
+
+
+def _post_geometry_lines(lines: List[str], charge_line: Optional[int]) -> List[Tuple[int, str]]:
+    """Return non-empty lines after the first geometry block separator."""
+    if charge_line is None:
+        return []
+
+    geometry_seen = False
+    after_geometry = False
+    post_lines = []
+    for i in range(charge_line + 1, len(lines)):
+        stripped = lines[i].strip()
+        if not stripped and geometry_seen:
+            after_geometry = True
+            continue
+        if not stripped:
+            continue
+        if after_geometry:
+            post_lines.append((i, stripped))
+        else:
+            geometry_seen = True
+    return post_lines
+
+
+def _append_raw_structure_diagnostics(
+    diagnostics: List[types.Diagnostic], lines: List[str], parser: GJFParser
+) -> None:
+    """Diagnose section separators and charge/multiplicity shape."""
+    route_line = _find_route_line(lines)
+    charge_data = _find_charge_line(lines)
+    charge_line = charge_data[0] if charge_data else None
+
+    if route_line is not None and route_line + 1 < len(lines):
+        next_line = lines[route_line + 1].strip()
+        if next_line and not _looks_like_route_continuation(next_line):
+            diagnostics.append(
+                _make_diagnostic(
+                    route_line + 1,
+                    "Missing blank line after route section before the title.",
+                    types.DiagnosticSeverity.Error,
+                    len(lines[route_line + 1]),
+                )
+            )
+
+    if charge_line is not None and charge_line > 0 and lines[charge_line - 1].strip():
+        diagnostics.append(
+            _make_diagnostic(
+                charge_line,
+                "Missing blank line after title section before charge/multiplicity.",
+                types.DiagnosticSeverity.Error,
+                len(lines[charge_line]),
+            )
+        )
+
+    if charge_data is None:
+        likely_bad_line = None
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if not stripped or stripped.startswith(("%", "#", "!")):
+                continue
+            if INT_START_PATTERN.match(stripped):
+                likely_bad_line = i
+                diagnostics.append(
+                    _make_diagnostic(
+                        i,
+                        "Invalid charge/multiplicity line; use two integers like '0 1'.",
+                        types.DiagnosticSeverity.Error,
+                        len(line),
+                    )
+                )
+                break
+
+        if likely_bad_line is None:
+            first_atom_line = next(
+                (i for i, line in enumerate(lines) if parser.ATOM_PATTERN.match(line.strip())),
+                len(lines) - 1,
+            )
+            diagnostics.append(
+                _make_diagnostic(
+                    first_atom_line,
+                    "Missing charge/multiplicity line before geometry; add a line like '0 1'.",
+                    types.DiagnosticSeverity.Error,
+                    len(lines[first_atom_line]) if lines else 1,
+                )
+            )
+
+
+def _append_link0_value_diagnostics(diagnostics: List[types.Diagnostic], lines: List[str]) -> None:
+    """Validate Link0 value formats that commonly stop Gaussian startup."""
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.startswith("%"):
+            continue
+
+        if "=" not in stripped:
+            continue
+
+        key, value = stripped[1:].split("=", 1)
+        key_lower = key.lower()
+        value = value.strip()
+        if key_lower in {"chk", "oldchk"} and not value:
+            diagnostics.append(
+                _make_diagnostic(
+                    i,
+                    f"%{key_lower} must include a non-empty value.",
+                    types.DiagnosticSeverity.Error,
+                    len(line),
+                )
+            )
+        elif key_lower == "mem":
+            if not re.match(r"^[1-9]\d*(?:\.\d+)?\s*(KB|MB|GB|TB|KW|MW|GW|TW)?$", value, re.I):
+                diagnostics.append(
+                    _make_diagnostic(
+                        i,
+                        "%mem value should include a positive number and optional unit like MB or GB.",
+                        types.DiagnosticSeverity.Error,
+                        len(line),
+                    )
+                )
+        elif key_lower in {"nproc", "nprocs", "nprocshared", "nprocsshared"}:
+            if not value.isdigit() or int(value) < 1:
+                diagnostics.append(
+                    _make_diagnostic(
+                        i,
+                        f"%{key_lower} must be a positive integer.",
+                        types.DiagnosticSeverity.Error,
+                        len(line),
+                    )
+                )
+
+
+def _append_route_semantic_diagnostics(
+    diagnostics: List[types.Diagnostic], lines: List[str], route_section: str
+) -> None:
+    """Validate route-level syntax and common typo failures."""
+    route_line = _find_route_line(lines)
+    if route_line is None:
+        return
+
+    if route_section.count("(") != route_section.count(")"):
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                "Unbalanced parentheses in route section; close keyword option groups.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    route_upper = route_section.upper()
+    for typo, hint in ROUTE_TYPO_HINTS.items():
+        if typo in route_upper:
+            diagnostics.append(
+                _make_diagnostic(
+                    route_line, hint, types.DiagnosticSeverity.Error, len(lines[route_line])
+                )
+            )
+
+
+def _append_chemistry_diagnostics(
+    diagnostics: List[types.Diagnostic], lines: List[str], job: GaussianJob
+) -> None:
+    """Validate static chemistry constraints that Gaussian rejects early."""
+    if not job.atoms:
+        return
+
+    total_electrons = 0
+    for element, _x, _y, _z in job.atoms:
+        canonical = _canonical_element(element)
+        if canonical in {"X", "Bq"} or element.isdigit():
+            continue
+        if canonical not in ELEMENT_ATOMIC_NUMBERS:
+            return
+        total_electrons += ELEMENT_ATOMIC_NUMBERS[canonical]
+    total_electrons -= job.charge
+
+    if total_electrons > 0 and total_electrons % 2 != (job.multiplicity - 1) % 2:
+        charge_line = _find_charge_line(lines)
+        line = charge_line[0] if charge_line else 0
+        diagnostics.append(
+            _make_diagnostic(
+                line,
+                "Charge/multiplicity electron count parity mismatch; check total electrons and spin multiplicity.",
+                types.DiagnosticSeverity.Error,
+                len(lines[line]) if lines else 1,
+            )
+        )
+
+
+def _basis_section_lines(lines: List[str], charge_line: Optional[int]) -> List[str]:
+    """Return non-empty lines after the geometry block."""
+    return [line for _i, line in _post_geometry_lines(lines, charge_line)]
+
+
+def _append_basis_diagnostics(
+    diagnostics: List[types.Diagnostic], lines: List[str], job: GaussianJob
+) -> None:
+    """Validate Gen/GenECP and ECP basis situations."""
+    route_line = _find_route_line(lines)
+    charge_data = _find_charge_line(lines)
+    extra_lines = _basis_section_lines(lines, charge_data[0] if charge_data else None)
+    route_upper = job.route_section.upper()
+    if route_line is None:
+        return
+
+    has_genecp = re.search(r"[/\s=]GENECP\b", route_upper) is not None
+    has_gen = re.search(r"[/\s=]GEN\b", route_upper) is not None
+
+    if has_gen and "****" not in extra_lines:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                "Gen basis set is requested, but no custom basis section with **** delimiters was found.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if has_genecp:
+        delimiter_count = sum(1 for line in extra_lines if line == "****")
+        if delimiter_count < 2:
+            diagnostics.append(
+                _make_diagnostic(
+                    route_line,
+                    "GenECP is requested, but no separate ECP block was found after the basis section.",
+                    types.DiagnosticSeverity.Error,
+                    len(lines[route_line]),
+                )
+            )
+
+    if has_gen or has_genecp:
+        geometry_elements = {_canonical_element(atom[0]) for atom in job.atoms}
+        for basis_line in extra_lines:
+            if basis_line == "****":
+                continue
+            parts = basis_line.split()
+            first_element = _canonical_element(parts[0])
+            if first_element not in VALID_ELEMENTS:
+                continue
+            if parts[-1] != "0":
+                line_index = next(
+                    (i for i, line in enumerate(lines) if line.strip() == basis_line),
+                    route_line,
+                )
+                diagnostics.append(
+                    _make_diagnostic(
+                        line_index,
+                        "Custom basis center line must end with 0.",
+                        types.DiagnosticSeverity.Error,
+                        len(lines[line_index]),
+                    )
+                )
+                continue
+            for center in parts[:-1]:
+                center_element = _canonical_element(center)
+                if center_element in VALID_ELEMENTS and center_element not in geometry_elements:
+                    line_index = next(
+                        (i for i, line in enumerate(lines) if line.strip() == basis_line),
+                        route_line,
+                    )
+                    diagnostics.append(
+                        _make_diagnostic(
+                            line_index,
+                            f"Custom basis references {center_element}, but geometry has no {center_element} atoms.",
+                            types.DiagnosticSeverity.Error,
+                            len(lines[line_index]),
+                        )
+                    )
+                    break
+
+    if any(marker in route_upper for marker in ECP_BASIS_MARKERS):
+        has_heavy_element = any(
+            ELEMENT_ATOMIC_NUMBERS.get(_canonical_element(atom[0]), 0) > 36 for atom in job.atoms
+        )
+        if job.atoms and not has_heavy_element:
+            diagnostics.append(
+                _make_diagnostic(
+                    route_line,
+                    "ECP basis set is usually intended for heavier elements; check whether this basis is appropriate.",
+                    types.DiagnosticSeverity.Warning,
+                    len(lines[route_line]),
+                )
+            )
+
+
+def _append_geometry_diagnostics(
+    diagnostics: List[types.Diagnostic], lines: List[str], parser: GJFParser, job: GaussianJob
+) -> None:
+    """Validate coordinate and ModRedundant lines."""
+    charge_data = _find_charge_line(lines)
+    charge_line = charge_data[0] if charge_data else None
+    for i in _geometry_line_indexes(lines, charge_line):
+        stripped = lines[i].strip()
+        if parser.ATOM_PATTERN.match(stripped):
+            continue
+
+        parts = stripped.split()
+        if len(parts) >= 2 and _canonical_element(parts[0]) in VALID_ELEMENTS:
+            diagnostics.append(
+                _make_diagnostic(
+                    i,
+                    "Invalid coordinate line; expected 'Element X Y Z' with three numeric coordinates.",
+                    types.DiagnosticSeverity.Error,
+                    len(lines[i]),
+                )
+            )
+
+    atom_count = len(job.atoms)
+    for i, line in enumerate(lines):
+        parts = line.strip().split()
+        if not parts or parts[0].upper() not in MODRED_ATOM_COUNTS:
+            continue
+
+        command = parts[0].upper()
+        expected_atoms = MODRED_ATOM_COUNTS[command]
+        atom_refs = []
+        for token in parts[1 : 1 + expected_atoms]:
+            if token.isdigit():
+                atom_refs.append(int(token))
+        if len(atom_refs) != expected_atoms:
+            diagnostics.append(
+                _make_diagnostic(
+                    i,
+                    f"ModRedundant {command} command expects {expected_atoms} integer atom indexes.",
+                    types.DiagnosticSeverity.Error,
+                    len(line),
+                )
+            )
+            continue
+        for atom_ref in atom_refs:
+            if atom_ref < 1 or atom_ref > atom_count:
+                diagnostics.append(
+                    _make_diagnostic(
+                        i,
+                        f"ModRedundant command references atom {atom_ref}, but geometry has {atom_count} atoms.",
+                        types.DiagnosticSeverity.Error,
+                        len(line),
+                    )
+                )
+                break
+
+    for index, first_atom in enumerate(job.atoms):
+        first_element, first_x, first_y, first_z = first_atom
+        for second_atom in job.atoms[index + 1 :]:
+            second_element, second_x, second_y, second_z = second_atom
+            distance = (
+                (first_x - second_x) ** 2 + (first_y - second_y) ** 2 + (first_z - second_z) ** 2
+            ) ** 0.5
+            if distance < 0.1:
+                diagnostics.append(
+                    _make_diagnostic(
+                        charge_line + 1 if charge_line is not None else 0,
+                        f"Atoms {first_element} and {second_element} are very close; Gaussian may fail after running.",
+                        types.DiagnosticSeverity.Warning,
+                        1,
+                    )
+                )
+                return
+
+
+def _append_zmatrix_diagnostics(
+    diagnostics: List[types.Diagnostic], lines: List[str], parser: GJFParser
+) -> None:
+    """Validate common Z-matrix input mistakes that surface as L101 errors."""
+    charge_data = _find_charge_line(lines)
+    charge_line = charge_data[0] if charge_data else None
+    geometry_indexes = _geometry_line_indexes(lines, charge_line)
+    if not geometry_indexes:
+        return
+
+    variable_refs = set()
+    has_zmatrix_line = False
+    for i in geometry_indexes:
+        stripped = lines[i].strip()
+        parts = stripped.split()
+        if not parts or _canonical_element(parts[0]) not in VALID_ELEMENTS:
+            continue
+        if parser.ATOM_PATTERN.match(stripped):
+            continue
+
+        has_zmatrix_line = True
+        if len(parts) not in {1, 3, 5, 7}:
+            diagnostics.append(
+                _make_diagnostic(
+                    i,
+                    "Mixed Cartesian/Z-matrix coordinate line; use either 3 Cartesian numbers or valid Z-matrix fields.",
+                    types.DiagnosticSeverity.Error,
+                    len(lines[i]),
+                )
+            )
+            continue
+
+        for ref_position in range(1, len(parts), 2):
+            if not parts[ref_position].isdigit():
+                diagnostics.append(
+                    _make_diagnostic(
+                        i,
+                        "Z-matrix atom reference positions must be integer atom indexes.",
+                        types.DiagnosticSeverity.Error,
+                        len(lines[i]),
+                    )
+                )
+                break
+        for value_position in range(2, len(parts), 2):
+            value = parts[value_position]
+            if not SIMPLE_NUMBER_PATTERN.match(value):
+                variable_refs.add(value)
+
+    if not has_zmatrix_line:
+        return
+
+    variable_defs = set()
+    for i, line in _post_geometry_lines(lines, charge_line):
+        if "=" not in line:
+            continue
+        name, value = [part.strip() for part in line.split("=", 1)]
+        if not ZMATRIX_VARIABLE_PATTERN.match(name) or not SIMPLE_NUMBER_PATTERN.match(value):
+            diagnostics.append(
+                _make_diagnostic(
+                    i,
+                    "Invalid Z-matrix variable definition; use NAME=numeric_value.",
+                    types.DiagnosticSeverity.Error,
+                    len(lines[i]),
+                )
+            )
+            continue
+        variable_defs.add(name)
+
+    for variable in sorted(variable_refs - variable_defs):
+        line = geometry_indexes[-1]
+        diagnostics.append(
+            _make_diagnostic(
+                line,
+                f"Undefined Z-matrix variable: {variable}.",
+                types.DiagnosticSeverity.Error,
+                len(lines[line]),
+            )
+        )
 
 
 def _analyze_content(content: str) -> List[types.Diagnostic]:
@@ -376,6 +1018,14 @@ def _analyze_content(content: str) -> List[types.Diagnostic]:
                         )
                     )
                     break
+
+        _append_raw_structure_diagnostics(diagnostics, lines, parser)
+        _append_link0_value_diagnostics(diagnostics, lines)
+        _append_route_semantic_diagnostics(diagnostics, lines, job.route_section)
+        _append_chemistry_diagnostics(diagnostics, lines, job)
+        _append_basis_diagnostics(diagnostics, lines, job)
+        _append_geometry_diagnostics(diagnostics, lines, parser, job)
+        _append_zmatrix_diagnostics(diagnostics, lines, parser)
 
     except Exception as e:
         diagnostics.append(

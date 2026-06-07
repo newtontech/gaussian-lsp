@@ -172,7 +172,7 @@ F
 
 Test
 
-0 1
+0 2
 H 0.0 0.0 0.0
 """
         parser = GJFParser()
@@ -248,7 +248,7 @@ H 0.0 0.0 0.0
 
 Test
 
-0 1
+0 2
 H 0.0 0.0 0.0
 """
             parser = GJFParser()
@@ -348,7 +348,7 @@ class TestServerCoverage:
 
 Test
 
-0 1
+0 2
 H 0.0 0.0 0.0
 """
         diagnostics = _analyze_content(content)
@@ -413,7 +413,7 @@ H 0.0 0.0 1.0
 
 Test
 
-0 1
+0 2
 H 0.0 0.0 0.0
 """
         diagnostics = _analyze_content(content)
