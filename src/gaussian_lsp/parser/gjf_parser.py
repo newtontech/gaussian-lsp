@@ -5,6 +5,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+MAX_CONTENT_BYTES = 10 * 1024 * 1024
+MAX_FILE_BYTES = 10 * 1024 * 1024
+MAX_LINES = 100_000
+MAX_LINE_LENGTH = 1_000
+UNSAFE_LINK0_CHARS = frozenset({";", "|", "&", "$", "`", '"', "\\"})
+
 # Complete periodic table of elements (up to Oganesson, 118)
 VALID_ELEMENTS = {
     # Period 1
@@ -403,11 +409,12 @@ class GaussianJob:
 class GJFParser:
     """Parser for Gaussian input files (.gjf, .com)."""
 
-    LINK0_PATTERN = re.compile(r"^%(\w+)=(.+)$")
+    LINK0_PATTERN = re.compile(r"^%([A-Za-z][A-Za-z0-9]{0,31})=(.{1,1000})$")
     CHARGE_MULT_PATTERN = re.compile(r"^([+-]?\d+)\s+(\d+)$")
-    NUMBER_PATTERN = r"[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[Ee][+-]?\d+)?"
+    NUMBER_PATTERN = r"[+-]?(?:(?:\d{1,32}(?:\.\d{0,32})?)|(?:\.\d{1,32}))(?:[Ee][+-]?\d{1,4})?"
     ATOM_PATTERN = re.compile(
-        rf"^(\w+\d*(?:\(\w+\))?)\s+({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+({NUMBER_PATTERN})"
+        rf"^([A-Za-z0-9]{{1,16}}(?:\([A-Za-z0-9=_-]{{1,32}}\))?)\s+"
+        rf"({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+({NUMBER_PATTERN})"
     )
     COMMENT_PATTERN = re.compile(r"^!")
     MODRED_PATTERN = re.compile(r"^[MBADRLSFCK]\s+", re.IGNORECASE)
@@ -418,6 +425,7 @@ class GJFParser:
 
     def parse(self, content: str) -> GaussianJob:
         """Parse GJF/COM content."""
+        self._validate_content_limits(content)
         lines = content.strip().split("\n")
         lines = [line.strip() for line in lines]
 
@@ -462,7 +470,9 @@ class GJFParser:
                 match = self.LINK0_PATTERN.match(line)
                 if match:
                     key, value = match.groups()
-                    self.job.link0[key.lower()] = value.strip()
+                    value = value.strip()
+                    self._validate_link0_value(key, value)
+                    self.job.link0[key.lower()] = value
                     continue
                 elif line.startswith("#"):
                     # This is the route section
@@ -529,13 +539,40 @@ class GJFParser:
 
         return self.job
 
+    def _validate_content_limits(self, content: str) -> None:
+        """Validate content size before regex processing."""
+        if len(content.encode("utf-8")) > MAX_CONTENT_BYTES:
+            raise ValueError(f"Content exceeds maximum size of {MAX_CONTENT_BYTES} bytes")
+
+        raw_lines = content.splitlines()
+        if len(raw_lines) > MAX_LINES:
+            raise ValueError(f"Content exceeds maximum of {MAX_LINES} lines")
+
+        for line in raw_lines:
+            if len(line) > MAX_LINE_LENGTH:
+                raise ValueError(f"Line exceeds maximum length of {MAX_LINE_LENGTH} characters")
+
+    def _validate_link0_value(self, key: str, value: str) -> None:
+        """Validate Link0 command values before storing them."""
+        if any(char in value for char in UNSAFE_LINK0_CHARS) or any(
+            ord(char) < 32 for char in value
+        ):
+            raise ValueError(f"Invalid character in %{key} value")
+
     def parse_file(self, filepath: str) -> GaussianJob:
-        """Parse GJF/COM file."""
+        """Parse GJF/COM file with bounded file reads."""
+        raw_path = Path(filepath)
+        if ".." in raw_path.parts:
+            raise ValueError("Invalid file path")
+
         path = Path(filepath)
         if not path.exists():
             raise FileNotFoundError(f"GJF/COM file not found: {filepath}")
 
-        content = path.read_text()
+        if path.stat().st_size > MAX_FILE_BYTES:
+            raise ValueError(f"File exceeds maximum size of {MAX_FILE_BYTES} bytes")
+
+        content = path.read_text(encoding="utf-8")
         return self.parse(content)
 
     def validate(self, content: str) -> Tuple[bool, List[str]]:
@@ -592,8 +629,8 @@ class GJFParser:
             if not has_jobtype:
                 warnings.append("No recognizable job type found (assuming SP)")
 
-        except Exception as e:
-            errors.append(f"Parse error: {str(e)}")
+        except Exception:
+            errors.append("Parse error: Invalid GJF file format")
 
         return len(errors) == 0, errors + warnings
 

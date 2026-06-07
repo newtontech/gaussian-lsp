@@ -58,6 +58,9 @@ npm ci
 npm run test:ts
 ```
 
+The TypeScript parser under `src/parsers` is active and covered by
+`npm run typecheck` plus `npm run test:ts:coverage` in CI.
+
 If your local Python environment is not set up yet, you can reproduce the Python
 suite without modifying the project environment:
 
@@ -125,4 +128,5 @@ MIT
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for version history.
+See [LICENSE](LICENSE) for the license text and [CHANGELOG.md](CHANGELOG.md)
+for version history.

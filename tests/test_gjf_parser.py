@@ -379,6 +379,69 @@ H 0.0 0.0 0.0
         assert job.route_section == "# HF/STO-3G"
         assert job.title == "Test file"
 
+    def test_parse_file_rejects_traversal(self):
+        """Test parse_file rejects path traversal segments."""
+        parser = GJFParser()
+
+        with pytest.raises(ValueError, match="Invalid file path"):
+            parser.parse_file("../secret.gjf")
+
+    def test_parse_file_rejects_large_files(self, tmp_path):
+        """Test parse_file rejects files over the configured size limit."""
+        from gaussian_lsp.parser import gjf_parser
+
+        gjf_file = tmp_path / "large.gjf"
+        gjf_file.write_text("x" * (gjf_parser.MAX_FILE_BYTES + 1), encoding="utf-8")
+        parser = GJFParser()
+
+        with pytest.raises(ValueError, match="maximum size"):
+            parser.parse_file(str(gjf_file))
+
+    def test_parse_rejects_large_content(self):
+        """Test parse rejects content over the configured size limit."""
+        from gaussian_lsp.parser import gjf_parser
+
+        parser = GJFParser()
+
+        with pytest.raises(ValueError, match="maximum size"):
+            parser.parse("x" * (gjf_parser.MAX_CONTENT_BYTES + 1))
+
+    def test_parse_rejects_too_many_lines(self, monkeypatch):
+        """Test parse rejects excessive line counts."""
+        import gaussian_lsp.parser.gjf_parser as gjf_parser
+
+        monkeypatch.setattr(gjf_parser, "MAX_LINES", 2)
+        parser = GJFParser()
+
+        with pytest.raises(ValueError, match="maximum of 2 lines"):
+            parser.parse("# HF/STO-3G\n\nTitle\n")
+
+    def test_parse_rejects_long_lines(self):
+        """Test parse rejects excessive line length before regex matching."""
+        from gaussian_lsp.parser import gjf_parser
+
+        parser = GJFParser()
+
+        with pytest.raises(ValueError, match="maximum length"):
+            parser.parse("# " + ("H" * (gjf_parser.MAX_LINE_LENGTH + 1)))
+
+    def test_parse_rejects_unsafe_link0_value(self):
+        """Test unsafe Link0 shell-control characters are rejected."""
+        parser = GJFParser()
+
+        with pytest.raises(ValueError, match="Invalid character"):
+            parser.parse("%chk=water.chk;rm\n# HF/STO-3G\n\nBad\n\n0 1\nH 0 0 0\n")
+
+    def test_validate_reports_generic_parse_error(self):
+        """Test validate avoids echoing raw parser exception details."""
+        parser = GJFParser()
+        is_valid, errors = parser.validate(
+            "%chk=leaky;secret\n# HF/STO-3G\n\nBad\n\n0 1\nH 0 0 0\n"
+        )
+
+        assert not is_valid
+        assert errors == ["Parse error: Invalid GJF file format"]
+
     def test_validate_valid_gjf(self):
         """Test validation of valid GJF."""
         content = """# B3LYP/6-31G(d)
