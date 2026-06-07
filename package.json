@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test:ts": "vitest run",
     "test:ts:coverage": "vitest run --coverage"
   },

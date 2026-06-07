@@ -405,8 +405,9 @@ class GJFParser:
 
     LINK0_PATTERN = re.compile(r"^%(\w+)=(.+)$")
     CHARGE_MULT_PATTERN = re.compile(r"^([+-]?\d+)\s+(\d+)$")
+    NUMBER_PATTERN = r"[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[Ee][+-]?\d+)?"
     ATOM_PATTERN = re.compile(
-        r"^(\w+\d*(?:\(\w+\))?)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)"
+        rf"^(\w+\d*(?:\(\w+\))?)\s+({NUMBER_PATTERN})\s+({NUMBER_PATTERN})\s+({NUMBER_PATTERN})"
     )
     COMMENT_PATTERN = re.compile(r"^!")
     MODRED_PATTERN = re.compile(r"^[MBADRLSFCK]\s+", re.IGNORECASE)
@@ -430,6 +431,8 @@ class GJFParser:
 
         for i, line in enumerate(lines):
             if not line:
+                if section == "route":
+                    section = "title"
                 if section == "geometry" and geometry_started:  # pragma: no branch
                     # Check if next non-empty line is ModRedundant
                     for j in range(i + 1, len(lines)):
@@ -471,14 +474,11 @@ class GJFParser:
                     section = "title"
 
             if section == "route":
-                if not line.startswith("#") and not line.startswith("%"):
-                    section = "title"
+                if not self.job.route_section:
+                    self.job.route_section = line  # pragma: no cover
                 else:
-                    if not self.job.route_section:
-                        self.job.route_section = line  # pragma: no cover
-                    else:
-                        self.job.route_section += " " + line
-                    continue
+                    self.job.route_section += " " + line
+                continue
 
             if section == "title":
                 if not self.job.title:  # pragma: no cover

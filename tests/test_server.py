@@ -1,6 +1,89 @@
 """Tests for Gaussian LSP server."""
 
+import json
+import subprocess
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
+
+GAUSSIAN_ERROR_TAXONOMY = [
+    {
+        "label": "L1_QPErr_route_syntax",
+        "status": "static-detectable",
+        "reason": "Route keyword spelling and option syntax are visible in the input file.",
+        "fixture": "# M06-2X/6-31G(d)\n\nTypo\n\n0 1\nH 0.0 0.0 0.0\n",
+        "expected": "Use M062X instead of M06-2X",
+    },
+    {
+        "label": "L101_End_of_file_in_ZSymb",
+        "status": "static-detectable",
+        "reason": "Missing molecule specification or malformed geometry section is visible before running.",
+        "fixture": "# HF/STO-3G\n\nNo geometry\n\n0 1\n",
+        "expected": "No atoms defined",
+    },
+    {
+        "label": "L101_WantedFound_malformed_molecule",
+        "status": "static-detectable",
+        "reason": "Gaussian wanted/found type mismatches are often malformed charge or coordinate lines.",
+        "fixture": "# HF/STO-3G\n\nBad molecule\n\n0 singlet\nH 0.0 0.0 0.0\n",
+        "expected": "Invalid charge/multiplicity line",
+    },
+    {
+        "label": "L301_impossible_multiplicity_electrons",
+        "status": "static-detectable",
+        "reason": "Electron count and multiplicity parity can be computed from charge and elements.",
+        "fixture": "# HF/STO-3G\n\nHydrogen radical\n\n0 1\nH 0.0 0.0 0.0\n",
+        "expected": "electron count parity",
+    },
+    {
+        "label": "L301_basis_center",
+        "status": "static-detectable",
+        "reason": "Custom basis center cards are part of the input file.",
+        "fixture": "# HF/Gen\n\nBad basis\n\n0 1\nH 0.0 0.0 0.0\n\nH\nSTO-3G\n****\n",
+        "expected": "Custom basis center line must end with 0",
+    },
+    {
+        "label": "L301_ECP_pointer_card",
+        "status": "static-detectable",
+        "reason": "GenECP input must contain a separate ECP block after the basis block.",
+        "fixture": "# HF/GenECP\n\nMissing ECP\n\n0 2\nI 0.0 0.0 0.0\n\nI 0\nLANL2DZ\n****\n",
+        "expected": "GenECP is requested",
+    },
+    {
+        "label": "L202_atoms_too_close",
+        "status": "runtime-inferred",
+        "reason": "Exact Gaussian crowding thresholds are runtime behavior, but near-duplicate coordinates are visible.",
+        "fixture": "# HF/STO-3G\n\nCrowded\n\n0 1\nH 0.0 0.0 0.0\nH 0.0 0.0 0.01\n",
+        "expected": "very close",
+    },
+    {
+        "label": "L9999_optimization_stopped",
+        "status": "runtime-only",
+        "reason": "Requires optimization trajectory/output information after Gaussian runs.",
+    },
+    {
+        "label": "L103_internal_coordinate_failure",
+        "status": "runtime-only",
+        "reason": "Requires generated internal coordinates and optimization state.",
+    },
+    {
+        "label": "L502_SCF_convergence_failure",
+        "status": "runtime-only",
+        "reason": "Requires SCF iterations from Gaussian output.",
+    },
+    {
+        "label": "L914_L1002_not_enough_memory",
+        "status": "runtime-inferred",
+        "reason": "Exact memory need is runtime-only; suspicious %mem/%nproc combinations may be warned later.",
+    },
+    {
+        "label": "General_segmentation_fault",
+        "status": "out-of-scope-static",
+        "reason": "Generic crash output has no reliable input-only signature.",
+    },
+]
 
 
 class TestGaussianServer:
@@ -8,11 +91,12 @@ class TestGaussianServer:
 
     def test_server_exists(self):
         """Test server instance exists."""
+        from gaussian_lsp import __version__
         from gaussian_lsp.server import server
 
         assert server is not None
         assert server.name == "gaussian-lsp"
-        assert server.version == "0.2.11"
+        assert server.version == __version__
 
     def test_completion_feature(self):
         """Test completion feature returns keywords."""
@@ -138,7 +222,7 @@ class TestDiagnosticFeature:
 
 Test
 
-0 1
+0 2
 H 0.0 0.0 0.0
 """
         diagnostics = _analyze_content(content)
@@ -330,3 +414,680 @@ H 0.0 0.0 0.0
         # Should have error about missing route
         error_msgs = [d.message for d in diagnostics]
         assert any("route" in msg.lower() for msg in error_msgs)
+
+
+class TestEnhancedGaussianDiagnostics:
+    """Test Gaussian diagnostics for common real input failures."""
+
+    @staticmethod
+    def messages(content):
+        """Return diagnostic messages for content."""
+        from gaussian_lsp.server import _analyze_content
+
+        return [diagnostic.message for diagnostic in _analyze_content(content)]
+
+    @staticmethod
+    def diagnostics(content):
+        """Return diagnostics for content."""
+        from gaussian_lsp.server import _analyze_content
+
+        return _analyze_content(content)
+
+    def test_gaussian_error_taxonomy_matrix_is_complete(self):
+        """Test referenced Gaussian error families are mapped to LSP scope."""
+        statuses = {item["status"] for item in GAUSSIAN_ERROR_TAXONOMY}
+        labels = {item["label"] for item in GAUSSIAN_ERROR_TAXONOMY}
+
+        assert statuses == {
+            "static-detectable",
+            "runtime-inferred",
+            "runtime-only",
+            "out-of-scope-static",
+        }
+        assert {
+            "L1_QPErr_route_syntax",
+            "L101_End_of_file_in_ZSymb",
+            "L101_WantedFound_malformed_molecule",
+            "L301_basis_center",
+            "L9999_optimization_stopped",
+            "L103_internal_coordinate_failure",
+            "L502_SCF_convergence_failure",
+        }.issubset(labels)
+        for item in GAUSSIAN_ERROR_TAXONOMY:
+            assert item["label"]
+            assert item["reason"]
+            if item["status"] == "static-detectable":
+                assert item.get("fixture")
+                assert item.get("expected")
+
+    @pytest.mark.parametrize(
+        "case",
+        [item for item in GAUSSIAN_ERROR_TAXONOMY if item["status"] == "static-detectable"],
+        ids=lambda item: item["label"],
+    )
+    def test_static_detectable_gaussian_error_families_emit_errors(self, case):
+        """Test input-deterministic Gaussian error families emit LSP errors."""
+        from lsprotocol import types
+
+        diagnostics = self.diagnostics(case["fixture"])
+        messages = [diagnostic.message for diagnostic in diagnostics]
+
+        assert any(case["expected"] in message for message in messages)
+        assert any(
+            case["expected"] in diagnostic.message
+            and diagnostic.severity == types.DiagnosticSeverity.Error
+            for diagnostic in diagnostics
+        )
+
+    @pytest.mark.parametrize(
+        "case",
+        [item for item in GAUSSIAN_ERROR_TAXONOMY if item["status"] == "runtime-inferred"],
+        ids=lambda item: item["label"],
+    )
+    def test_runtime_inferred_gaussian_error_families_are_warnings_or_matrix_only(self, case):
+        """Test runtime-only risks inferred from input are warnings, not errors."""
+        from lsprotocol import types
+
+        if "fixture" not in case:
+            assert case["reason"]
+            return
+
+        diagnostics = self.diagnostics(case["fixture"])
+
+        assert any(case["expected"] in diagnostic.message for diagnostic in diagnostics)
+        assert any(
+            case["expected"] in diagnostic.message
+            and diagnostic.severity == types.DiagnosticSeverity.Warning
+            for diagnostic in diagnostics
+        )
+
+    def test_diagnostic_missing_required_blank_lines(self):
+        """Test required Gaussian section blank lines are detected."""
+        content = """# B3LYP/6-31G(d)
+Water title
+0 1
+O 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("blank line after route section" in message for message in messages)
+        assert any("blank line after title section" in message for message in messages)
+
+    def test_diagnostic_missing_charge_multiplicity(self):
+        """Test missing charge/multiplicity line is detected explicitly."""
+        content = """# B3LYP/6-31G(d)
+
+Water title
+
+O 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("Missing charge/multiplicity line" in message for message in messages)
+
+    def test_diagnostic_malformed_charge_multiplicity(self):
+        """Test malformed charge/multiplicity line is detected."""
+        content = """# B3LYP/6-31G(d)
+
+Water title
+
+0 singlet
+O 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("Invalid charge/multiplicity line" in message for message in messages)
+
+    def test_diagnostic_electron_multiplicity_parity_mismatch_odd_singlet(self):
+        """Test odd electron count with singlet multiplicity is flagged."""
+        content = """# HF/STO-3G
+
+Hydrogen radical
+
+0 1
+H 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("electron count parity" in message for message in messages)
+
+    def test_diagnostic_electron_multiplicity_parity_mismatch_even_doublet(self):
+        """Test even electron count with doublet multiplicity is flagged."""
+        content = """# HF/STO-3G
+
+Hydrogen molecule
+
+0 2
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+"""
+        messages = self.messages(content)
+
+        assert any("electron count parity" in message for message in messages)
+
+    def test_diagnostic_missing_gen_basis_section(self):
+        """Test Gen route without custom basis data is detected."""
+        content = """# B3LYP/Gen
+
+Water title
+
+0 1
+O 0.0 0.0 0.0
+H 0.0 0.0 1.0
+H 1.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("Gen basis set is requested" in message for message in messages)
+
+    def test_diagnostic_missing_genecp_ecp_section(self):
+        """Test GenECP route without an ECP block is detected."""
+        content = """# B3LYP/GenECP
+
+Iodine title
+
+0 2
+I 0.0 0.0 0.0
+
+I 0
+LANL2DZ
+****
+"""
+        messages = self.messages(content)
+
+        assert any("GenECP is requested" in message for message in messages)
+
+    def test_diagnostic_ecp_basis_with_light_elements(self):
+        """Test ECP basis on only light elements gets a warning."""
+        content = """# B3LYP/LANL2DZ
+
+Water title
+
+0 1
+O 0.0 0.0 0.0
+H 0.0 0.0 1.0
+H 1.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any(
+            "ECP basis set is usually intended for heavier elements" in message
+            for message in messages
+        )
+
+    def test_diagnostic_unbalanced_route_parentheses(self):
+        """Test route keyword parentheses are balanced."""
+        content = """# B3LYP/6-31G(d) opt=(ts,calcfc
+
+TS title
+
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+"""
+        messages = self.messages(content)
+
+        assert any("Unbalanced parentheses" in message for message in messages)
+
+    def test_diagnostic_common_route_typos(self):
+        """Test common Gaussian keyword typos are detected."""
+        content = """# b3lyp/631g optimize freqency
+
+Typo title
+
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+"""
+        messages = self.messages(content)
+
+        assert any("Use opt instead of optimize" in message for message in messages)
+        assert any("Use freq instead of freqency" in message for message in messages)
+        assert any("Did you mean 6-31G" in message for message in messages)
+
+    def test_diagnostic_modredundant_reference_out_of_range(self):
+        """Test ModRedundant atom references cannot exceed geometry size."""
+        content = """# B3LYP/6-31G(d) opt=modredundant
+
+Constrained title
+
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+
+B 1 9 F
+"""
+        messages = self.messages(content)
+
+        assert any("references atom 9" in message for message in messages)
+
+    def test_diagnostic_malformed_coordinate_line(self):
+        """Test malformed coordinate lines are detected."""
+        content = """# B3LYP/6-31G(d)
+
+Bad geometry
+
+0 1
+O 0.0 0.0
+H 0.0 zero 1.0
+H 1.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("Invalid coordinate line" in message for message in messages)
+
+    def test_diagnostic_link0_value_formats(self):
+        """Test Link0 resource values are validated."""
+        content = """%chk=
+%mem=abc
+%nproc=0
+%nprocshared=two
+# HF/STO-3G
+
+Bad Link0
+
+0 1
+H 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("%chk must include a non-empty value" in message for message in messages)
+        assert any("%mem value should include a positive number" in message for message in messages)
+        assert any("%nproc must be a positive integer" in message for message in messages)
+        assert any("%nprocshared must be a positive integer" in message for message in messages)
+
+    def test_diagnostic_ignores_link0_without_value_separator(self):
+        """Test incomplete Link0 lines without equals do not crash diagnostics."""
+        content = """%chk
+# HF/STO-3G
+
+Incomplete Link0
+
+0 2
+H 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert not any("must include a non-empty value" in message for message in messages)
+
+    def test_diagnostic_dummy_atom_does_not_affect_electron_parity(self):
+        """Test dummy atoms are skipped in electron parity checks."""
+        content = """# HF/STO-3G
+
+Dummy atom
+
+0 1
+X 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert not any("electron count parity" in message for message in messages)
+
+    def test_diagnostic_allows_valid_genecp_sections(self):
+        """Test GenECP with basis and ECP blocks does not emit missing-block errors."""
+        content = """# B3LYP/GenECP
+
+Iodine title
+
+0 2
+I 0.0 0.0 0.0
+
+I 0
+LANL2DZ
+****
+I 0
+LANL2DZ
+****
+"""
+        messages = self.messages(content)
+
+        assert not any("GenECP is requested" in message for message in messages)
+
+    def test_diagnostic_ecp_basis_with_heavy_element_is_allowed(self):
+        """Test ECP basis warning is not emitted for heavy elements."""
+        content = """# B3LYP/LANL2DZ
+
+Iodine title
+
+0 2
+I 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert not any("ECP basis set is usually intended" in message for message in messages)
+
+    def test_diagnostic_charge_then_blank_before_geometry(self):
+        """Test blank lines before geometry are tolerated while scanning geometry."""
+        content = """# HF/STO-3G
+
+Hydrogen radical
+
+0 2
+
+H 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert not any("Invalid coordinate line" in message for message in messages)
+
+    def test_diagnostic_modredundant_wrong_arity(self):
+        """Test ModRedundant commands with too few atom indexes are detected."""
+        content = """# B3LYP/6-31G(d) opt=modredundant
+
+Bad constraint
+
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+
+A 1 2 F
+"""
+        messages = self.messages(content)
+
+        assert any("expects 3 integer atom indexes" in message for message in messages)
+
+    def test_diagnostic_valid_modredundant_reference(self):
+        """Test valid ModRedundant atom references do not emit reference errors."""
+        content = """# B3LYP/6-31G(d) opt=modredundant
+
+Good constraint
+
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+
+B 1 2 F
+"""
+        messages = self.messages(content)
+
+        assert not any("ModRedundant command references" in message for message in messages)
+
+    def test_L101_ZSymb_undefined_zmatrix_variable(self):
+        """Test Z-matrix variable references must be defined."""
+        content = """# HF/STO-3G
+
+Z-matrix undefined variable
+
+0 1
+O
+H 1 R1
+H 1 R2 2 A1
+
+R1=0.960
+R2=0.960
+"""
+        messages = self.messages(content)
+
+        assert any("Undefined Z-matrix variable: A1" in message for message in messages)
+
+    def test_L101_ZSymb_malformed_zmatrix_variable_definition(self):
+        """Test malformed Z-matrix variable definitions are detected."""
+        content = """# HF/STO-3G
+
+Z-matrix bad variable
+
+0 1
+O
+H 1 R1
+
+R1=not-a-number
+"""
+        messages = self.messages(content)
+
+        assert any("Invalid Z-matrix variable definition" in message for message in messages)
+
+    def test_L101_ZSymb_ignores_non_variable_post_geometry_lines(self):
+        """Test non-variable post-geometry lines do not hide undefined Z-matrix variables."""
+        content = """# HF/STO-3G
+
+Z-matrix comment line
+
+0 1
+O
+H 1 R1
+
+Variables:
+"""
+        messages = self.messages(content)
+
+        assert any("Undefined Z-matrix variable: R1" in message for message in messages)
+
+    def test_L101_WantedFound_mixed_coordinate_line(self):
+        """Test mixed Cartesian/Z-matrix coordinate shapes are detected."""
+        content = """# HF/STO-3G
+
+Mixed geometry
+
+0 1
+O 0.0 0.0 0.0
+H 1 R1 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("Mixed Cartesian/Z-matrix coordinate line" in message for message in messages)
+
+    def test_L301_basis_references_absent_geometry_element(self):
+        """Test custom basis center cards must match geometry elements."""
+        content = """# HF/Gen
+
+Bad basis element
+
+0 2
+H 0.0 0.0 0.0
+
+N 0
+STO-3G
+****
+"""
+        messages = self.messages(content)
+
+        assert any("Custom basis references N" in message for message in messages)
+
+    def test_L301_basis_missing_delimiter(self):
+        """Test Gen basis sections require **** delimiters."""
+        content = """# HF/Gen
+
+Bad basis delimiter
+
+0 2
+H 0.0 0.0 0.0
+
+H 0
+STO-3G
+"""
+        messages = self.messages(content)
+
+        assert any("custom basis section with **** delimiters" in message for message in messages)
+
+    def test_L1_QPErr_link0_command_in_route(self):
+        """Test Link0-only processor command in route is an input syntax error."""
+        content = """# HF/STO-3G nprocshared=8
+
+Bad route
+
+0 2
+H 0.0 0.0 0.0
+"""
+        messages = self.messages(content)
+
+        assert any("%nprocshared as a Link0 command" in message for message in messages)
+
+    def test_L1_QPErr_modredundant_non_integer_index(self):
+        """Test ModRedundant atom indexes must be integers."""
+        content = """# HF/STO-3G opt=modredundant
+
+Bad modred
+
+0 1
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+
+B 1 two F
+"""
+        messages = self.messages(content)
+
+        assert any(
+            "ModRedundant B command expects 2 integer atom indexes" in message
+            for message in messages
+        )
+
+    def test_internal_geometry_index_helper_skips_leading_blank(self):
+        """Test geometry line helper skips blanks before atoms."""
+        from gaussian_lsp.server import _geometry_line_indexes
+
+        lines = ["0 1", "", "H 0.0 0.0 0.0"]
+
+        assert _geometry_line_indexes(lines, 0) == [2]
+
+    def test_internal_chemistry_helper_skips_dummy_and_numeric_atoms(self):
+        """Test electron counting skips dummy and numeric atom markers."""
+        from gaussian_lsp.parser.gjf_parser import GaussianJob
+        from gaussian_lsp.server import _append_chemistry_diagnostics
+
+        diagnostics = []
+        job = GaussianJob(
+            charge=0, multiplicity=1, atoms=[("X", 0.0, 0.0, 0.0), ("1", 0.0, 0.0, 0.0)]
+        )
+
+        _append_chemistry_diagnostics(diagnostics, ["0 1"], job)
+
+        assert diagnostics == []
+
+    def test_internal_basis_section_helper_skips_blank_before_geometry(self):
+        """Test basis section helper handles blank lines before geometry starts."""
+        from gaussian_lsp.server import _basis_section_lines
+
+        lines = ["0 1", "", "H 0.0 0.0 0.0", "", "H 0", "STO-3G", "****"]
+
+        assert _basis_section_lines(lines, 0) == ["H 0", "STO-3G", "****"]
+
+    def test_internal_geometry_helper_ignores_non_coordinate_extra_lines(self):
+        """Test non-coordinate non-element lines do not produce coordinate diagnostics."""
+        from gaussian_lsp.parser.gjf_parser import GaussianJob, GJFParser
+        from gaussian_lsp.server import _append_geometry_diagnostics
+
+        diagnostics = []
+        lines = ["0 1", "not a coordinate"]
+
+        _append_geometry_diagnostics(diagnostics, lines, GJFParser(), GaussianJob())
+
+        assert diagnostics == []
+
+    def test_lsp_protocol_reports_valid_and_broken_diagnostics(self, tmp_path):
+        """Test real LSP diagnostic requests for valid and broken files."""
+        root = Path(__file__).resolve().parents[1]
+        valid_uri = (root / "examples" / "water.gjf").resolve().as_uri()
+        valid_text = (root / "examples" / "water.gjf").read_text()
+        broken_uri = (tmp_path / "broken.gjf").resolve().as_uri()
+        broken_text = """%mem=abc
+# b3lyp/631g optimize
+
+Broken
+
+0 2
+H 0.0 0.0 0.0
+H 0.0 0.0 0.7
+
+B 1 9 F
+"""
+
+        proc = subprocess.Popen(
+            [sys.executable, "-c", "from gaussian_lsp.server import main; main()"],
+            cwd=root,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        next_id = 1
+
+        def send(payload):
+            raw = json.dumps(payload, separators=(",", ":")).encode()
+            assert proc.stdin is not None
+            proc.stdin.write(b"Content-Length: " + str(len(raw)).encode() + b"\r\n\r\n" + raw)
+            proc.stdin.flush()
+
+        def read_message():
+            assert proc.stdout is not None
+            headers = {}
+            line = proc.stdout.readline()
+            while line not in (b"\r\n", b"\n"):
+                key, value = line.decode().split(":", 1)
+                headers[key.lower()] = value.strip()
+                line = proc.stdout.readline()
+            return json.loads(proc.stdout.read(int(headers["content-length"])))
+
+        def request(method, params):
+            nonlocal next_id
+            request_id = next_id
+            next_id += 1
+            send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params})
+            while True:
+                message = read_message()
+                if message.get("id") == request_id:
+                    return message
+
+        def notify(method, params):
+            send({"jsonrpc": "2.0", "method": method, "params": params})
+
+        try:
+            request(
+                "initialize",
+                {"processId": None, "rootUri": root.resolve().as_uri(), "capabilities": {}},
+            )
+            notify("initialized", {})
+            notify(
+                "textDocument/didOpen",
+                {
+                    "textDocument": {
+                        "uri": valid_uri,
+                        "languageId": "gaussian",
+                        "version": 1,
+                        "text": valid_text,
+                    }
+                },
+            )
+            valid_response = request(
+                "textDocument/diagnostic",
+                {
+                    "textDocument": {"uri": valid_uri},
+                    "identifier": "proof",
+                    "previousResultId": None,
+                },
+            )
+            notify(
+                "textDocument/didOpen",
+                {
+                    "textDocument": {
+                        "uri": broken_uri,
+                        "languageId": "gaussian",
+                        "version": 1,
+                        "text": broken_text,
+                    }
+                },
+            )
+            broken_response = request(
+                "textDocument/diagnostic",
+                {
+                    "textDocument": {"uri": broken_uri},
+                    "identifier": "proof",
+                    "previousResultId": None,
+                },
+            )
+        finally:
+            try:
+                notify("exit", {})
+            except Exception:
+                pass
+            proc.kill()
+
+        valid_errors = [
+            item for item in valid_response["result"]["items"] if item.get("severity") == 1
+        ]
+        broken_messages = [item["message"] for item in broken_response["result"]["items"]]
+
+        assert valid_errors == []
+        assert any(
+            "%mem value should include a positive number" in message for message in broken_messages
+        )
+        assert any("electron count parity" in message for message in broken_messages)
+        assert any("references atom 9" in message for message in broken_messages)

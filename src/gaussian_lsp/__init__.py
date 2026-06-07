@@ -1,6 +1,11 @@
 """Gaussian LSP package."""
 
-__version__ = "0.2.10"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("gaussian-lsp")
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "0.2.11"
 
 from gaussian_lsp.parser import (
     GaussianJob,

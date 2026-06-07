@@ -22,7 +22,7 @@ export interface Atom {
 
 export class GJFParser {
   parse(content: string): GaussianInput {
-    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = content.split('\n').map(l => l.trim());
 
     const link0 = new Map<string, string>();
     let routeLine = '';
@@ -36,6 +36,13 @@ export class GJFParser {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
+      if (line.length === 0) {
+        if (section === 'route') {
+          section = 'title';
+        }
+        continue;
+      }
+
       // Link 0 section (% commands)
       if (line.startsWith('%')) {
         const [key, value] = line.slice(1).split('=', 2);
@@ -46,23 +53,33 @@ export class GJFParser {
       // Route section (#)
       if (line.startsWith('#')) {
         section = 'route';
-        routeLine = line;
+        routeLine = routeLine ? `${routeLine} ${line}` : line;
+        continue;
+      }
+
+      if (section === 'route') {
+        routeLine = `${routeLine} ${line}`;
         continue;
       }
 
       // Title section (blank line after route)
-      if (section === 'route' && !line.startsWith('#')) {
+      if (section === 'title') {
         section = 'title';
         title = line;
+        section = 'charge';
         continue;
       }
 
       // Charge and multiplicity
-      if (section === 'title') {
-        section = 'charge';
+      if (section === 'charge') {
         const parts = line.split(/\s+/);
-        charge = parseInt(parts[0]);
-        multiplicity = parseInt(parts[1]);
+        const parsedCharge = Number.parseInt(parts[0], 10);
+        const parsedMultiplicity = Number.parseInt(parts[1], 10);
+        if (!Number.isFinite(parsedCharge) || !Number.isFinite(parsedMultiplicity)) {
+          throw new Error(`Invalid charge/multiplicity line: ${line}`);
+        }
+        charge = parsedCharge;
+        multiplicity = parsedMultiplicity;
         section = 'geometry';
         continue;
       }
@@ -71,11 +88,17 @@ export class GJFParser {
       if (section === 'geometry') {
         const parts = line.split(/\s+/);
         if (parts.length >= 4) {
+          const x = Number.parseFloat(parts[1]);
+          const y = Number.parseFloat(parts[2]);
+          const z = Number.parseFloat(parts[3]);
+          if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+            throw new Error(`Invalid coordinate line: ${line}`);
+          }
           atoms.push({
             element: parts[0],
-            x: parseFloat(parts[1]),
-            y: parseFloat(parts[2]),
-            z: parseFloat(parts[3])
+            x,
+            y,
+            z
           });
         }
       }
@@ -104,7 +127,9 @@ export class GJFParser {
 
     for (const part of parts) {
       if (part.includes('/')) {
-        [method, basisSet] = part.split('/');
+        const slashIndex = part.indexOf('/');
+        method = part.slice(0, slashIndex);
+        basisSet = part.slice(slashIndex + 1);
       } else if (['opt', 'freq', 'sp', 'td', 'scrf'].includes(part.toLowerCase())) {
         options.push(part);
       } else if (!method) {

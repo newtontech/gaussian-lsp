@@ -1,7 +1,10 @@
 """Tests for Gaussian GJF parser."""
 
+from importlib.metadata import version
+
 import pytest
 
+from gaussian_lsp import __version__
 from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
     GAUSSIAN_JOB_TYPES,
@@ -16,6 +19,14 @@ from gaussian_lsp.parser.gjf_parser import (
     parse_gjf_file,
     validate_gjf,
 )
+
+
+class TestPackageMetadata:
+    """Test package metadata exposed at runtime."""
+
+    def test_version_matches_installed_metadata(self):
+        """Test runtime version is sourced from installed package metadata."""
+        assert __version__ == version("gaussian-lsp")
 
 
 class TestConstants:
@@ -259,6 +270,41 @@ H 0.0 0.0 0.0
 
         assert "# B3LYP/6-31G(d)" in job.route_section
         assert "# opt freq" in job.route_section
+
+    def test_parse_route_continuation_without_hash(self):
+        """Test Gaussian route continuation lines that do not repeat #."""
+        content = """# opt freq
+B3LYP/6-31G(d) scrf=(solvent=water)
+
+Continuation route
+
+0 1
+O 0.0 0.0 0.0
+H 0.0 0.0 0.9
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+
+        assert job.route_section == "# opt freq B3LYP/6-31G(d) scrf=(solvent=water)"
+        assert job.title == "Continuation route"
+        assert len(job.atoms) == 2
+
+    def test_parse_scientific_notation_coordinates(self):
+        """Test coordinates commonly emitted in scientific notation."""
+        content = """# B3LYP/6-31G(d)
+
+Scientific coordinates
+
+0 1
+O +1.0E-03 -.250 1.
+H -7.57160e-01 5.86260E-01 .000000
+"""
+        parser = GJFParser()
+        job = parser.parse(content)
+
+        assert len(job.atoms) == 2
+        assert job.atoms[0] == ("O", 0.001, -0.25, 1.0)
+        assert job.atoms[1] == ("H", -0.75716, 0.58626, 0.0)
 
     def test_parse_with_modredundant(self):
         """Test parsing with ModRedundant section."""
