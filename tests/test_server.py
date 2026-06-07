@@ -203,6 +203,38 @@ class TestGaussianServer:
         word = _get_word_at_position(line, len(line))
         assert word == ""
 
+    def test_get_word_at_position_gaussian_punctuation(self):
+        """Test Gaussian-aware hover tokens keep keyword punctuation."""
+        from gaussian_lsp.server import _get_word_at_position, _hover_lookup_candidates
+
+        assert _get_word_at_position("# CCSD(T)/cc-pVDZ", 3) == "CCSD(T)"
+        assert _get_word_at_position("# CCSD(T)/cc-pVDZ", 10) == "cc-pVDZ"
+        assert _get_word_at_position("# CAM-B3LYP/6-31+G*", 4) == "CAM-B3LYP"
+        assert _get_word_at_position("# CAM-B3LYP/6-31+G*", 15) == "6-31+G*"
+        assert _hover_lookup_candidates("") == []
+        assert _hover_lookup_candidates("B3LYP/6-31G(d)") == [
+            "B3LYP/6-31G(d)",
+            "B3LYP",
+            "6-31G(d)",
+        ]
+        assert _hover_lookup_candidates("HF/HF") == ["HF/HF", "HF"]
+
+    def test_hover_unknown_gaussian_token_returns_none(self):
+        """Test hover returns None for unknown non-empty tokens."""
+        from gaussian_lsp.server import hover
+
+        mock_params = MagicMock()
+        mock_params.text_document.uri = "file:///test.gjf"
+        mock_params.position.line = 0
+        mock_params.position.character = 2
+
+        with patch("gaussian_lsp.server.server") as mock_server:
+            mock_doc = MagicMock()
+            mock_doc.lines = ["# UNKNOWNKEYWORD"]
+            mock_server.workspace.get_text_document.return_value = mock_doc
+
+            assert hover(mock_params) is None
+
     def test_get_word_at_position_empty_line(self):
         """Test word extraction with empty line."""
         from gaussian_lsp.server import _get_word_at_position
@@ -930,6 +962,99 @@ B 1 two F
             "ModRedundant B command expects 2 integer atom indexes" in message
             for message in messages
         )
+
+    @pytest.mark.parametrize(
+        ("route", "expected"),
+        [
+            ("# RHF UHF/6-31G(d)", "Mutually exclusive SCF methods"),
+            ("# B3LYP/6-31G(d) MP2", "Conflicting calculation methods"),
+            ("# SP OPT B3LYP/6-31G(d)", "SP and OPT are mutually exclusive"),
+            ("# B3LYP/6-31G(d) cc-pVDZ", "Multiple basis sets"),
+            ("# PM6/cc-pVTZ", "Semi-empirical methods"),
+            ("# RHF/6-31G(d) Guess=Mix", "Guess=Mix"),
+            ("# B3LYP/6-31G(d) Opt=ModRedundant", "Opt=ModRedundant"),
+        ],
+    )
+    def test_route_keyword_conflicts(self, route, expected):
+        """Test route keyword incompatibilities emit static diagnostics."""
+        messages = self.messages(
+            f"""{route}
+
+Route conflict
+
+0 1
+H 0.0 0.0 0.0
+"""
+        )
+
+        assert any(expected in message for message in messages)
+
+    def test_diagnostic_parse_error_is_generic(self):
+        """Test parser exceptions do not leak raw exception details to users."""
+        messages = self.messages("%chk=bad;rm\n# HF/STO-3G\n\nBad\n\n0 1\nH 0 0 0\n")
+
+        assert "Parse error: Invalid GJF file format" in messages
+        assert not any("bad;rm" in message for message in messages)
+
+    def test_diagnostic_permission_error_is_generic(self):
+        """Test permission errors are reported without raw details."""
+        from unittest.mock import patch
+
+        from gaussian_lsp.server import _analyze_content
+
+        with patch("gaussian_lsp.server.GJFParser") as mock_parser_cls:
+            mock_parser_cls.return_value.parse.side_effect = PermissionError("/secret/path")
+            messages = [diagnostic.message for diagnostic in _analyze_content("content")]
+
+        assert messages == ["Parse error: Unable to read Gaussian input"]
+
+    def test_diagnostic_unexpected_error_is_generic(self):
+        """Test unexpected parser errors are reported without raw details."""
+        from unittest.mock import patch
+
+        from gaussian_lsp.server import _analyze_content
+
+        with patch("gaussian_lsp.server.GJFParser") as mock_parser_cls:
+            mock_parser_cls.return_value.parse.side_effect = RuntimeError("internal secret")
+            messages = [diagnostic.message for diagnostic in _analyze_content("content")]
+
+        assert messages == ["Parse error: Invalid GJF file format"]
+
+    def test_validation_accuracy_framework_meets_threshold(self):
+        """Test validation cases meet the documented accuracy threshold."""
+        cases = [
+            ("# RHF UHF/6-31G(d)\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# RHF ROHF/6-31G(d)\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# B3LYP/6-31G(d) MP2\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# PBE0/6-31G(d) CCSD\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# SP OPT B3LYP/6-31G(d)\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# B3LYP/6-31G(d) cc-pVDZ\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# PM6/cc-pVTZ\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# RHF/6-31G(d) Guess=Mix\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# B3LYP/6-31G(d) Opt=ModRedundant\n\nBad\n\n0 1\nH 0 0 0\n", True),
+            ("# HF/STO-3G\n\nOdd singlet\n\n0 1\nH 0 0 0\n", True),
+            ("# HF/Gen\n\nNo basis\n\n0 1\nH 0 0 0\n", True),
+            ("# HF/STO-3G\n\nBad coord\n\n0 1\nH x 0 0\n", True),
+            ("# HF/STO-3G\n\nValid\n\n0 2\nH 0 0 0\n", False),
+            ("# B3LYP/6-31G(d) opt freq\n\nValid\n\n0 1\nH 0 0 0\nH 0 0 1\n", False),
+            ("# PM6 opt\n\nValid\n\n0 1\nH 0 0 0\nH 0 0 1\n", False),
+            ("# HF/Gen\n\nValid\n\n0 2\nH 0 0 0\n\nH 0\nSTO-3G\n****\n", False),
+        ]
+
+        true_positive = false_positive = false_negative = 0
+        for content, should_error in cases:
+            has_error = any(diagnostic.severity == 1 for diagnostic in self.diagnostics(content))
+            true_positive += int(has_error and should_error)
+            false_positive += int(has_error and not should_error)
+            false_negative += int(not has_error and should_error)
+
+        precision = true_positive / (true_positive + false_positive)
+        recall = true_positive / (true_positive + false_negative)
+        f1 = 2 * precision * recall / (precision + recall)
+
+        assert precision >= 0.9
+        assert recall >= 0.9
+        assert f1 >= 0.9
 
     def test_internal_geometry_index_helper_skips_leading_blank(self):
         """Test geometry line helper skips blanks before atoms."""

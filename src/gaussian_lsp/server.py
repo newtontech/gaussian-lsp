@@ -1,5 +1,6 @@
 """Gaussian Language Server Protocol implementation."""
 
+import logging
 import re
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -17,6 +18,7 @@ from gaussian_lsp.parser.gjf_parser import (
 )
 
 server = LanguageServer("gaussian-lsp", __version__)
+logger = logging.getLogger(__name__)
 
 
 # Documentation for keywords
@@ -203,6 +205,38 @@ ROUTE_TYPO_HINTS = {
     "631G": "Did you mean 6-31G?",
     "NPROCSHARED": "Use %nprocshared as a Link0 command, not a route keyword.",
 }
+HOVER_TOKEN_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_()*,.=")
+ROUTE_SPLIT_PATTERN = re.compile(r"[\s/,=]+")
+SCF_TYPES = {"RHF", "UHF", "ROHF"}
+DFT_METHODS = {
+    "B3LYP",
+    "B3P86",
+    "B3PW91",
+    "B1B95",
+    "B1LYP",
+    "PBE",
+    "PBE0",
+    "PBE1PBE",
+    "RPBE",
+    "REVTPSS",
+    "M06",
+    "M06HF",
+    "M062X",
+    "M06L",
+    "WB97",
+    "WB97X",
+    "WB97XD",
+    "CAM-B3LYP",
+    "BLYP",
+    "BP86",
+    "BP91",
+    "OLYP",
+    "OPBE",
+    "TPSS",
+    "TPSSH",
+}
+POST_HF_METHODS = {"MP2", "MP3", "MP4", "MP4SDQ", "MP5", "CCSD", "CCSD(T)", "QCISD", "QCISD(T)"}
+SEMIEMPIRICAL_METHODS = {"PM3", "PM6", "PM7", "AM1", "RM1", "MNDO", "MNDOD", "DFTB", "DFTB3"}
 
 
 @server.feature(types.TEXT_DOCUMENT_COMPLETION)
@@ -255,17 +289,20 @@ def hover(params: types.HoverParams) -> Optional[types.Hover]:
     line = document.lines[params.position.line]
     word = _get_word_at_position(line, params.position.character)
 
-    if word.upper() in KEYWORD_DOCS:
-        return types.Hover(
-            contents=types.MarkupContent(
-                kind=types.MarkupKind.Markdown, value=f"**{word}**\n\n{KEYWORD_DOCS[word.upper()]}"
+    candidates = _hover_lookup_candidates(word)
+    for candidate in candidates:
+        if candidate.upper() in KEYWORD_DOCS:
+            return types.Hover(
+                contents=types.MarkupContent(
+                    kind=types.MarkupKind.Markdown,
+                    value=f"**{candidate}**\n\n{KEYWORD_DOCS[candidate.upper()]}",
+                )
             )
-        )
 
     # Check methods, basis sets, job types
-    word_upper = word.upper()
+    candidate_uppers = {candidate.upper() for candidate in candidates}
     for method in GAUSSIAN_METHODS:
-        if word_upper == method.upper():
+        if method.upper() in candidate_uppers:
             return types.Hover(
                 contents=types.MarkupContent(
                     kind=types.MarkupKind.Markdown,
@@ -274,7 +311,7 @@ def hover(params: types.HoverParams) -> Optional[types.Hover]:
             )
 
     for basis in GAUSSIAN_BASIS_SETS:
-        if word_upper == basis.upper():
+        if basis.upper() in candidate_uppers:
             return types.Hover(
                 contents=types.MarkupContent(
                     kind=types.MarkupKind.Markdown, value=f"**{basis}**\n\nGaussian basis set."
@@ -284,6 +321,19 @@ def hover(params: types.HoverParams) -> Optional[types.Hover]:
     return None
 
 
+def _hover_lookup_candidates(word: str) -> List[str]:
+    """Return possible hover lookup keys for a Gaussian route token."""
+    if not word:
+        return []
+
+    candidates = [word]
+    for part in re.split(r"[/=]", word):
+        if part and part not in candidates:
+            candidates.append(part)
+
+    return candidates
+
+
 def _get_word_at_position(line: str, position: int) -> str:
     """Extract word at given position in line."""
     if position >= len(line):
@@ -291,11 +341,11 @@ def _get_word_at_position(line: str, position: int) -> str:
 
     # Find word boundaries
     start = position
-    while start > 0 and line[start - 1].isalnum():
+    while start > 0 and line[start - 1] in HOVER_TOKEN_CHARS:
         start -= 1
 
     end = position
-    while end < len(line) and line[end].isalnum():
+    while end < len(line) and line[end] in HOVER_TOKEN_CHARS:
         end += 1
 
     return line[start:end]
@@ -539,7 +589,7 @@ def _append_link0_value_diagnostics(diagnostics: List[types.Diagnostic], lines: 
 
 
 def _append_route_semantic_diagnostics(
-    diagnostics: List[types.Diagnostic], lines: List[str], route_section: str
+    diagnostics: List[types.Diagnostic], lines: List[str], route_section: str, job: GaussianJob
 ) -> None:
     """Validate route-level syntax and common typo failures."""
     route_line = _find_route_line(lines)
@@ -567,6 +617,103 @@ def _append_route_semantic_diagnostics(
                     len(lines[route_line]),
                 )
             )
+
+    tokens = _route_tokens(route_section)
+    token_set = set(tokens)
+    method_tokens = _ordered_matches(tokens, GAUSSIAN_METHODS)
+    basis_tokens = _ordered_matches(tokens, GAUSSIAN_BASIS_SETS)
+    scf_tokens = sorted(token_set & SCF_TYPES)
+    post_hf_tokens = [method for method in method_tokens if method in POST_HF_METHODS]
+    dft_tokens = [method for method in method_tokens if method in DFT_METHODS]
+    semiempirical_tokens = [method for method in method_tokens if method in SEMIEMPIRICAL_METHODS]
+
+    if len(scf_tokens) > 1:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                f"Mutually exclusive SCF methods in route section: {', '.join(scf_tokens)}.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if len(method_tokens) > 1 and (post_hf_tokens or dft_tokens or semiempirical_tokens):
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                f"Conflicting calculation methods in route section: {', '.join(method_tokens)}.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if "SP" in token_set and "OPT" in token_set:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                "SP and OPT are mutually exclusive job types.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if len(basis_tokens) > 1:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                f"Multiple basis sets in route section: {', '.join(basis_tokens)}.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if semiempirical_tokens and basis_tokens:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                "Semi-empirical methods such as "
+                f"{semiempirical_tokens[0]} should not be combined with explicit basis sets.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if "GUESS" in token_set and "MIX" in token_set and "RHF" in token_set:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                "Guess=Mix is intended for unrestricted/open-shell calculations, not RHF.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+    if "OPT" in token_set and "MODREDUNDANT" in token_set and not job.modredundant:
+        diagnostics.append(
+            _make_diagnostic(
+                route_line,
+                "Opt=ModRedundant is requested, but no ModRedundant section was found.",
+                types.DiagnosticSeverity.Error,
+                len(lines[route_line]),
+            )
+        )
+
+
+def _route_tokens(route_section: str) -> List[str]:
+    """Return uppercase Gaussian route tokens."""
+    cleaned = route_section.replace("#", " ").replace("(", " ").replace(")", " ")
+    return [token.upper() for token in ROUTE_SPLIT_PATTERN.split(cleaned) if token]
+
+
+def _ordered_matches(tokens: List[str], choices: List[str]) -> List[str]:
+    """Return route tokens that exactly match supported Gaussian choices."""
+    token_set = set(tokens)
+    matches = []
+    for choice in choices:
+        normalized = choice.upper()
+        if normalized in token_set and normalized not in matches:
+            matches.append(normalized)
+    return matches
 
 
 def _append_chemistry_diagnostics(
@@ -1039,20 +1186,47 @@ def _analyze_content(content: str) -> List[types.Diagnostic]:
 
         _append_raw_structure_diagnostics(diagnostics, lines, parser)
         _append_link0_value_diagnostics(diagnostics, lines)
-        _append_route_semantic_diagnostics(diagnostics, lines, job.route_section)
+        _append_route_semantic_diagnostics(diagnostics, lines, job.route_section, job)
         _append_chemistry_diagnostics(diagnostics, lines, job)
         _append_basis_diagnostics(diagnostics, lines, job)
         _append_geometry_diagnostics(diagnostics, lines, parser, job)
         _append_zmatrix_diagnostics(diagnostics, lines, parser)
 
-    except Exception as e:
+    except ValueError:
+        logger.warning("Invalid Gaussian input during diagnostics", exc_info=True)
         diagnostics.append(
             types.Diagnostic(
                 range=types.Range(
                     start=types.Position(line=0, character=0),
                     end=types.Position(line=0, character=1),
                 ),
-                message=f"Parse error: {str(e)}",
+                message="Parse error: Invalid GJF file format",
+                severity=types.DiagnosticSeverity.Error,
+                source="gaussian-lsp",
+            )
+        )
+    except PermissionError:
+        logger.warning("Permission error during Gaussian input diagnostics", exc_info=True)
+        diagnostics.append(
+            types.Diagnostic(
+                range=types.Range(
+                    start=types.Position(line=0, character=0),
+                    end=types.Position(line=0, character=1),
+                ),
+                message="Parse error: Unable to read Gaussian input",
+                severity=types.DiagnosticSeverity.Error,
+                source="gaussian-lsp",
+            )
+        )
+    except Exception:
+        logger.error("Unexpected Gaussian input diagnostic failure", exc_info=True)
+        diagnostics.append(
+            types.Diagnostic(
+                range=types.Range(
+                    start=types.Position(line=0, character=0),
+                    end=types.Position(line=0, character=1),
+                ),
+                message="Parse error: Invalid GJF file format",
                 severity=types.DiagnosticSeverity.Error,
                 source="gaussian-lsp",
             )
