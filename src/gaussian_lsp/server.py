@@ -8,6 +8,7 @@ from lsprotocol import types
 from pygls.server import LanguageServer
 
 from gaussian_lsp import __version__
+from gaussian_lsp.features.code_actions import CodeActionProvider
 from gaussian_lsp.features.diagnostic import DiagnosticProvider
 from gaussian_lsp.features.lint import LintProvider
 from gaussian_lsp.features.typecheck import TypecheckProvider
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 diagnostic_provider = DiagnosticProvider(server)
 lint_provider = LintProvider(server)
 typecheck_provider = TypecheckProvider()
+code_action_provider = CodeActionProvider()
 
 
 # Documentation for keywords
@@ -392,6 +394,14 @@ def formatting(params: types.DocumentFormattingParams) -> List[types.TextEdit]:
             new_text=formatted,
         )
     ]
+
+
+@server.feature(types.TEXT_DOCUMENT_CODE_ACTION)
+def code_action(params: types.CodeActionParams) -> List[types.CodeAction]:
+    """Provide code actions for the document."""
+    document = server.workspace.get_text_document(params.text_document.uri)
+    content = document.source
+    return code_action_provider.get_code_actions(content, params.context.diagnostics)
 
 
 @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
