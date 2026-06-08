@@ -9,6 +9,7 @@ from pygls.server import LanguageServer
 
 from gaussian_lsp import __version__
 from gaussian_lsp.features.diagnostic import DiagnosticProvider
+from gaussian_lsp.features.lint import LintProvider
 from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
     GAUSSIAN_JOB_TYPES,
@@ -22,6 +23,7 @@ server = LanguageServer("gaussian-lsp", __version__)
 logger = logging.getLogger(__name__)
 
 diagnostic_provider = DiagnosticProvider(server)
+lint_provider = LintProvider(server)
 
 
 # Documentation for keywords
@@ -361,6 +363,7 @@ def diagnostic(params: types.DocumentDiagnosticParams) -> types.RelatedFullDocum
     content = document.source
 
     diagnostics = _analyze_content(content)
+    diagnostics.extend(lint_provider.lint(content))
 
     return types.RelatedFullDocumentDiagnosticReport(
         items=diagnostics, kind=types.DocumentDiagnosticReportKind.Full
@@ -395,6 +398,7 @@ def did_open(params: types.DidOpenTextDocumentParams) -> None:
     uri = params.text_document.uri
     text = params.text_document.text
     diagnostics = diagnostic_provider.get_diagnostics(text)
+    diagnostics.extend(lint_provider.lint(text))
     server.publish_diagnostics(uri, diagnostics)
 
 
@@ -405,6 +409,7 @@ def did_change(params: types.DidChangeTextDocumentParams) -> None:
     if params.content_changes:
         text = params.content_changes[-1].text
         diagnostics = diagnostic_provider.get_diagnostics(text)
+        diagnostics.extend(lint_provider.lint(text))
         server.publish_diagnostics(uri, diagnostics)
 
 
