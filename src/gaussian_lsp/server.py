@@ -8,6 +8,7 @@ from lsprotocol import types
 from pygls.server import LanguageServer
 
 from gaussian_lsp import __version__
+from gaussian_lsp.features.diagnostic import DiagnosticProvider
 from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
     GAUSSIAN_JOB_TYPES,
@@ -19,6 +20,8 @@ from gaussian_lsp.parser.gjf_parser import (
 
 server = LanguageServer("gaussian-lsp", __version__)
 logger = logging.getLogger(__name__)
+
+diagnostic_provider = DiagnosticProvider(server)
 
 
 # Documentation for keywords
@@ -384,6 +387,25 @@ def formatting(params: types.DocumentFormattingParams) -> List[types.TextEdit]:
             new_text=formatted,
         )
     ]
+
+
+@server.feature(types.TEXT_DOCUMENT_DID_OPEN)
+def did_open(params: types.DidOpenTextDocumentParams) -> None:
+    """Handle document open — publish live diagnostics."""
+    uri = params.text_document.uri
+    text = params.text_document.text
+    diagnostics = diagnostic_provider.get_diagnostics(text)
+    server.publish_diagnostics(uri, diagnostics)
+
+
+@server.feature(types.TEXT_DOCUMENT_DID_CHANGE)
+def did_change(params: types.DidChangeTextDocumentParams) -> None:
+    """Handle document change — publish live diagnostics."""
+    uri = params.text_document.uri
+    if params.content_changes:
+        text = params.content_changes[-1].text
+        diagnostics = diagnostic_provider.get_diagnostics(text)
+        server.publish_diagnostics(uri, diagnostics)
 
 
 def _make_diagnostic(
