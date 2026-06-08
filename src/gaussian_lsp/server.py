@@ -10,6 +10,7 @@ from pygls.server import LanguageServer
 from gaussian_lsp import __version__
 from gaussian_lsp.features.diagnostic import DiagnosticProvider
 from gaussian_lsp.features.lint import LintProvider
+from gaussian_lsp.features.typecheck import TypecheckProvider
 from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
     GAUSSIAN_JOB_TYPES,
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 diagnostic_provider = DiagnosticProvider(server)
 lint_provider = LintProvider(server)
+typecheck_provider = TypecheckProvider()
 
 
 # Documentation for keywords
@@ -399,6 +401,7 @@ def did_open(params: types.DidOpenTextDocumentParams) -> None:
     text = params.text_document.text
     diagnostics = diagnostic_provider.get_diagnostics(text)
     diagnostics.extend(lint_provider.lint(text))
+    diagnostics.extend(typecheck_provider.validate(text))
     server.publish_diagnostics(uri, diagnostics)
 
 
@@ -410,6 +413,7 @@ def did_change(params: types.DidChangeTextDocumentParams) -> None:
         text = params.content_changes[-1].text
         diagnostics = diagnostic_provider.get_diagnostics(text)
         diagnostics.extend(lint_provider.lint(text))
+        diagnostics.extend(typecheck_provider.validate(text))
         server.publish_diagnostics(uri, diagnostics)
 
 
@@ -1218,6 +1222,9 @@ def _analyze_content(content: str) -> List[types.Diagnostic]:
         _append_basis_diagnostics(diagnostics, lines, job)
         _append_geometry_diagnostics(diagnostics, lines, parser, job)
         _append_zmatrix_diagnostics(diagnostics, lines, parser)
+
+        # Append typecheck diagnostics (keyword types, enums, units, required sections)
+        diagnostics.extend(typecheck_provider.validate(content))
 
     except ValueError:
         logger.warning("Invalid Gaussian input during diagnostics", exc_info=True)
