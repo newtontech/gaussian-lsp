@@ -10,7 +10,6 @@ from lsprotocol.types import (
 )
 
 from gaussian_lsp.features.formatting import (
-    FormattingProvider,
     _ATOM_RE,
     _CHARGE_MULT_RE,
     _COMMENT_RE,
@@ -18,11 +17,11 @@ from gaussian_lsp.features.formatting import (
     _MODRED_RE,
     _MODRED_SINGLE_RE,
     _ROUTE_RE,
+    FormattingProvider,
     _format_atom_line,
     _is_route_continuation,
     get_formatting_provider,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -330,10 +329,7 @@ class TestFormatDocument:
     def test_modredundant_single_letter_command(self) -> None:
         """Single-letter ModRedundant commands are detected."""
         provider = FormattingProvider(None)  # type: ignore[arg-type]
-        content = (
-            "# B3LYP/6-31G(d) opt=modredundant\n\nTest\n\n0 1\n"
-            f"{_FMT_WATER_O}\n\nB\n"
-        )
+        content = "# B3LYP/6-31G(d) opt=modredundant\n\nTest\n\n0 1\n" f"{_FMT_WATER_O}\n\nB\n"
         result = provider.format_document(content, _fmt_params())
         assert isinstance(result, list)
 
@@ -347,11 +343,7 @@ class TestFormatDocument:
     def test_geometry_transition_to_post_geometry(self) -> None:
         """Non-atom, non-modred line in geometry phase transitions to post_geometry."""
         provider = FormattingProvider(None)  # type: ignore[arg-type]
-        content = (
-            "# B3LYP/6-31G(d)\n\nTest\n\n0 1\n"
-            "O  0.0  0.0  0.0\n"
-            "some-variable = 1.5\n"
-        )
+        content = "# B3LYP/6-31G(d)\n\nTest\n\n0 1\n" "O  0.0  0.0  0.0\n" "some-variable = 1.5\n"
         result = provider.format_document(content, _fmt_params())
         assert len(result) == 1
         assert "some-variable = 1.5" in result[0].new_text
@@ -360,11 +352,7 @@ class TestFormatDocument:
         """Lines after geometry are passed through in post_geometry phase."""
         provider = FormattingProvider(None)  # type: ignore[arg-type]
         content = (
-            "# B3LYP/6-31G(d)\n\nTest\n\n0 1\n"
-            "O  0.0  0.0  0.0\n"
-            "\n"
-            "Variables:\n"
-            "R = 1.0\n"
+            "# B3LYP/6-31G(d)\n\nTest\n\n0 1\n" "O  0.0  0.0  0.0\n" "\n" "Variables:\n" "R = 1.0\n"
         )
         result = provider.format_document(content, _fmt_params())
         assert len(result) == 1
@@ -510,10 +498,7 @@ class TestIdempotency:
         "B 1 2 S 5.0\n"
     )
 
-    MALFORMED = (
-        "random garbage\n"
-        "more garbage\n"
-    )
+    MALFORMED = "random garbage\n" "more garbage\n"
 
     @pytest.fixture
     def provider(self) -> FormattingProvider:
@@ -641,7 +626,9 @@ class TestEdgeCases:
         result = provider.format_range(content, params)
         assert isinstance(result, list)
 
-    def test_range_format_end_char_nonzero_already_formatted(self, provider: FormattingProvider) -> None:
+    def test_range_format_end_char_nonzero_already_formatted(
+        self, provider: FormattingProvider
+    ) -> None:
         """Range with end.character > 0 where content is already formatted returns []."""
         params = DocumentRangeFormattingParams(
             text_document=None,  # type: ignore[arg-type]
@@ -662,7 +649,9 @@ class TestEdgeCases:
         result = provider._format_lines([], params)
         assert result == []
 
-    def test_range_format_end_character_zero_trailing_newline(self, provider: FormattingProvider) -> None:
+    def test_range_format_end_character_zero_trailing_newline(
+        self, provider: FormattingProvider
+    ) -> None:
         """Range formatting with end.character=0 but text ends with newline."""
         params = DocumentRangeFormattingParams(
             text_document=None,  # type: ignore[arg-type]

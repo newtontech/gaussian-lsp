@@ -136,9 +136,7 @@ H 0.0 0.0 0.0
         diagnostics = provider.validate(content)
         # The parser treats "0 1" as the title, so we get missing coords.
         messages = [d.message for d in diagnostics]
-        assert any(
-            "coordinate" in m.lower() or "title" in m.lower() for m in messages
-        )
+        assert any("coordinate" in m.lower() or "title" in m.lower() for m in messages)
 
     def test_missing_atoms(self, provider: TypecheckProvider) -> None:
         """Missing atoms should produce an error."""
@@ -233,8 +231,7 @@ H 0.0 0.0 0.7
 """
         diagnostics = provider.validate(content)
         method_warnings = [
-            d for d in diagnostics
-            if "method" in d.message.lower() and d.source == SOURCE
+            d for d in diagnostics if "method" in d.message.lower() and d.source == SOURCE
         ]
         assert method_warnings == []
 
@@ -256,8 +253,7 @@ H S
 """
         diagnostics = provider.validate(content)
         basis_warnings = [
-            d for d in diagnostics
-            if "basis" in d.message.lower() and d.source == SOURCE
+            d for d in diagnostics if "basis" in d.message.lower() and d.source == SOURCE
         ]
         assert basis_warnings == []
 
@@ -276,7 +272,8 @@ class TestLink0Types:
             content = f"%mem={value}\n# HF/STO-3G SP\n\nTitle\n\n0 1\nH 0.0 0.0 0.0\n"
             diagnostics = provider.validate(content)
             errors = [
-                d for d in diagnostics
+                d
+                for d in diagnostics
                 if d.severity == DiagnosticSeverity.Error and "mem" in d.message.lower()
             ]
             assert errors == [], f"Unexpected error for %mem={value}"
@@ -294,7 +291,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "mem" in d.message.lower()
         ]
         assert len(errors) == 1
@@ -312,7 +310,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "mem" in d.message.lower()
         ]
         assert len(errors) == 1
@@ -330,7 +329,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "nprocshared" in d.message.lower()
         ]
         assert errors == []
@@ -348,7 +348,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "nprocshared" in d.message.lower()
         ]
         assert len(errors) == 1
@@ -366,7 +367,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "nprocshared" in d.message.lower()
         ]
         assert len(errors) == 1
@@ -384,7 +386,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "nprocshared" in d.message.lower()
         ]
         assert len(errors) == 1
@@ -402,7 +405,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "chk" in d.message.lower()
         ]
         assert len(errors) >= 1
@@ -428,7 +432,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         guess_warnings = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if "guess" in d.message.lower() and "unknown" in d.message.lower()
         ]
         assert guess_warnings == []
@@ -445,7 +450,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         warnings = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if "unknown" in d.message.lower() and "guess" in d.message.lower()
         ]
         assert len(warnings) == 1
@@ -462,8 +468,7 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         scf_warnings = [
-            d for d in diagnostics
-            if "unknown" in d.message.lower() and "scf" in d.message.lower()
+            d for d in diagnostics if "unknown" in d.message.lower() and "scf" in d.message.lower()
         ]
         assert scf_warnings == []
 
@@ -479,8 +484,7 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         warnings = [
-            d for d in diagnostics
-            if "unknown" in d.message.lower() and "scf" in d.message.lower()
+            d for d in diagnostics if "unknown" in d.message.lower() and "scf" in d.message.lower()
         ]
         assert len(warnings) == 1
 
@@ -496,8 +500,7 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         opt_warnings = [
-            d for d in diagnostics
-            if "unknown" in d.message.lower() and "opt" in d.message.lower()
+            d for d in diagnostics if "unknown" in d.message.lower() and "opt" in d.message.lower()
         ]
         assert opt_warnings == []
 
@@ -513,8 +516,7 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         opt_warnings = [
-            d for d in diagnostics
-            if "unknown" in d.message.lower() and "opt" in d.message.lower()
+            d for d in diagnostics if "unknown" in d.message.lower() and "opt" in d.message.lower()
         ]
         assert opt_warnings == []
 
@@ -539,7 +541,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         unit_errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if "unknown" in d.message.lower() and "units" in d.message.lower()
         ]
         assert unit_errors == []
@@ -556,7 +559,8 @@ H 0.0 0.0 0.0
 """
         diagnostics = provider.validate(content)
         unit_errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if "unknown" in d.message.lower() and "units" in d.message.lower()
         ]
         assert len(unit_errors) == 1
@@ -609,9 +613,7 @@ H 0.0 0.0 0.0
             assert d.source == SOURCE
             assert d.source == "gaussian-lsp-typecheck"
 
-    def test_valid_input_all_diagnostics_have_source(
-        self, provider: TypecheckProvider
-    ) -> None:
+    def test_valid_input_all_diagnostics_have_source(self, provider: TypecheckProvider) -> None:
         """Even for valid input, any diagnostics should have correct source."""
         content = """\
 # B3LYP/6-31G(d) opt
@@ -678,7 +680,8 @@ H 0.0 0.0 0.0
         diagnostics = provider.validate(content)
         # subst has empty value but is not in the critical set
         errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "subst" in d.message.lower()
         ]
         assert errors == []
@@ -697,7 +700,8 @@ H 0.0 0.0 0.0
         diagnostics = provider.validate(content)
         # The key is not in _LINK0_SCHEMA, so no typecheck errors for it
         unknown_errors = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.severity == DiagnosticSeverity.Error and "unknownkey" in d.message.lower()
         ]
         assert unknown_errors == []
@@ -747,6 +751,7 @@ H  0.0 -0.758 0.504
         """Invalid multiplicity when charge line cannot be found should skip."""
         # This exercises the branch where charge_line is None in _check_required_sections
         from unittest.mock import patch
+
         from gaussian_lsp.parser.gjf_parser import GaussianJob
 
         fake_job = GaussianJob(
@@ -822,6 +827,7 @@ H  0.0 -0.758 0.504
     def test_no_route_line_skips_type_checks(self, provider: TypecheckProvider) -> None:
         """When there's no route line, route type checks should return empty."""
         from unittest.mock import patch
+
         from gaussian_lsp.parser.gjf_parser import GaussianJob
 
         fake_job = GaussianJob(
@@ -850,7 +856,6 @@ H 0.0 0.0 0.0
         diagnostics = provider.validate(content)
         # QC is valid, BogusOption is not in the SCF enum
         warnings = [
-            d for d in diagnostics
-            if "unknown" in d.message.lower() and "scf" in d.message.lower()
+            d for d in diagnostics if "unknown" in d.message.lower() and "scf" in d.message.lower()
         ]
         assert len(warnings) == 1

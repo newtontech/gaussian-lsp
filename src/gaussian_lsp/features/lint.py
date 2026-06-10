@@ -20,12 +20,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from lsprotocol.types import (
-    Diagnostic,
-    DiagnosticSeverity,
-    Position,
-    Range,
-)
+from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
 from pygls.server import LanguageServer
 
 from gaussian_lsp.parser.gjf_parser import (
@@ -81,49 +76,143 @@ RULE_VERBOSITY_HINT = "G040"
 _ROUTE_SPLIT = re.compile(r"[\s/,=]+")
 
 # Known route-level keywords that are not methods, basis sets, or job types.
-_EXTRA_ROUTE_KEYWORDS: frozenset[str] = frozenset({
-    # SCF options
-    "SCF", "CONVENTIONAL", "DIRECT", "INCORE",
-    # Guess
-    "GUESS", "READ", "MIX", "ONLY", "ALTER", "HUCKEL", "CARD",
-    # Integral
-    "INTEGRALS", "GRID", "FINE", "ULTRAFINE", "SG1", "COARSE",
-    # Opt options
-    "MAXCYCLE", "LOPT", "NOLOG", "READFC", "FC", "SADDLE",
-    "CALCFC", "CALCALL", "NOGRADIENT", "HESSIAN",
-    "MODREDUNDANT", "MODREDBND", "NOMRED",
-    # General
-    "POP", "DENSITY", "OUTPUT", "IOp", "SYMMETRY", "NOSYMM",
-    "NOINTERACTION", "TEST", "CHK", "RWFD",
-    "SCFCON", "SCFDM", "SCFQC", "DIIS", "VDW", "VOLUME",
-    "SYMM", "LOOSE", "TIGHT", "VERYTIGHT",
-    "NOSYM", "NO.SYMMETRY", "GEOM", "ALLCHECK", "CHECK",
-    "FORMCHECK", "OLDPHASE", "TRANSITION", "NOINTERNA",
-    # Opt/Freq qualifiers
-    "Z-MATRIX", "CARTESIAN", "REDUNDANT", "INTERNAL",
-    "NORAMAN", "NOANHARMONIC", "ANHARMONIC",
-    "READISOTOPES", "SAVE", "NOSAVE",
-    "TEMPERATURE", "PRESSURE", "SCALE",
-    # Pop options
-    "FULL", "MK", "CHELPG", "HIRSHFELD", "NBO", "NBOREAD", "NPA",
-    "MULLIKEN", "ESP", "CHARGES",
-    # Integral / SCF options
-    "SUPERFINE", "FINEGRID", "COARSEGRID",
-    # CD, CIS, TD options
-    "SINGLETS", "TRIPLETS", "ROOT", "NSTATES", "EQUILIBRIA",
-    "TRUST", "MAXSTEP", "RECALCULE", "LINESEARCH",
-    "TIGHTCONVERGENCE", "VERYTIGHTCONVERGENCE",
-    "REOPTIMIZED",
-    # Restart / checkpoint
-    "READMO", "SAVEFC", "RDCHECK", "WRTCHECK",
-    "ALL", "NONE", "MINIMAL", "NORMAL",
-    # Basis / route
-    "GEN", "GENECP", "CHKBASIS", "EXTRABASIS", "DIFFUSE", "POLARIZATION",
-    # Solvation
-    "SCRF", "PCM", "SMD", "DIELECTRIC", "SOLVENT",
-    # Misc
-    "MOLECULE", "MO", "PRINT", "NOPRINT",
-})
+_EXTRA_ROUTE_KEYWORDS: frozenset[str] = frozenset(
+    {
+        # SCF options
+        "SCF",
+        "CONVENTIONAL",
+        "DIRECT",
+        "INCORE",
+        # Guess
+        "GUESS",
+        "READ",
+        "MIX",
+        "ONLY",
+        "ALTER",
+        "HUCKEL",
+        "CARD",
+        # Integral
+        "INTEGRALS",
+        "GRID",
+        "FINE",
+        "ULTRAFINE",
+        "SG1",
+        "COARSE",
+        # Opt options
+        "MAXCYCLE",
+        "LOPT",
+        "NOLOG",
+        "READFC",
+        "FC",
+        "SADDLE",
+        "CALCFC",
+        "CALCALL",
+        "NOGRADIENT",
+        "HESSIAN",
+        "MODREDUNDANT",
+        "MODREDBND",
+        "NOMRED",
+        # General
+        "POP",
+        "DENSITY",
+        "OUTPUT",
+        "IOp",
+        "SYMMETRY",
+        "NOSYMM",
+        "NOINTERACTION",
+        "TEST",
+        "CHK",
+        "RWFD",
+        "SCFCON",
+        "SCFDM",
+        "SCFQC",
+        "DIIS",
+        "VDW",
+        "VOLUME",
+        "SYMM",
+        "LOOSE",
+        "TIGHT",
+        "VERYTIGHT",
+        "NOSYM",
+        "NO.SYMMETRY",
+        "GEOM",
+        "ALLCHECK",
+        "CHECK",
+        "FORMCHECK",
+        "OLDPHASE",
+        "TRANSITION",
+        "NOINTERNA",
+        # Opt/Freq qualifiers
+        "Z-MATRIX",
+        "CARTESIAN",
+        "REDUNDANT",
+        "INTERNAL",
+        "NORAMAN",
+        "NOANHARMONIC",
+        "ANHARMONIC",
+        "READISOTOPES",
+        "SAVE",
+        "NOSAVE",
+        "TEMPERATURE",
+        "PRESSURE",
+        "SCALE",
+        # Pop options
+        "FULL",
+        "MK",
+        "CHELPG",
+        "HIRSHFELD",
+        "NBO",
+        "NBOREAD",
+        "NPA",
+        "MULLIKEN",
+        "ESP",
+        "CHARGES",
+        # Integral / SCF options
+        "SUPERFINE",
+        "FINEGRID",
+        "COARSEGRID",
+        # CD, CIS, TD options
+        "SINGLETS",
+        "TRIPLETS",
+        "ROOT",
+        "NSTATES",
+        "EQUILIBRIA",
+        "TRUST",
+        "MAXSTEP",
+        "RECALCULE",
+        "LINESEARCH",
+        "TIGHTCONVERGENCE",
+        "VERYTIGHTCONVERGENCE",
+        "REOPTIMIZED",
+        # Restart / checkpoint
+        "READMO",
+        "SAVEFC",
+        "RDCHECK",
+        "WRTCHECK",
+        "ALL",
+        "NONE",
+        "MINIMAL",
+        "NORMAL",
+        # Basis / route
+        "GEN",
+        "GENECP",
+        "CHKBASIS",
+        "EXTRABASIS",
+        "DIFFUSE",
+        "POLARIZATION",
+        # Solvation
+        "SCRF",
+        "PCM",
+        "SMD",
+        "DIELECTRIC",
+        "SOLVENT",
+        # Misc
+        "MOLECULE",
+        "MO",
+        "PRINT",
+        "NOPRINT",
+    }
+)
 
 # All valid route tokens (methods + basis + job types + extras), upper-cased.
 _ALL_VALID_TOKENS: frozenset[str] = (
@@ -277,8 +366,7 @@ class LintProvider:
                 diagnostics.append(
                     Diagnostic(
                         range=range_,
-                        message=f"Possible typo: '{token}' -- did you mean "
-                        f"'{matched_typo}'?",
+                        message=f"Possible typo: '{token}' -- did you mean " f"'{matched_typo}'?",
                         severity=DiagnosticSeverity.Error,
                         source=self.SOURCE,
                         code=RULE_ROUTE_TYPO,
@@ -337,9 +425,7 @@ class LintProvider:
                             Diagnostic(
                                 range=Range(
                                     start=Position(line=i, character=0),
-                                    end=Position(
-                                        line=i, character=len(stripped)
-                                    ),
+                                    end=Position(line=i, character=len(stripped)),
                                 ),
                                 message="%nproc is set to 1; consider increasing "
                                 "for faster parallel computation.",
@@ -358,9 +444,7 @@ class LintProvider:
                         Diagnostic(
                             range=Range(
                                 start=Position(line=i, character=0),
-                                end=Position(
-                                    line=i, character=len(stripped)
-                                ),
+                                end=Position(line=i, character=len(stripped)),
                             ),
                             message=f"%mem is set to {mb} MB; most Gaussian "
                             "jobs benefit from at least 128 MB.",
@@ -450,22 +534,28 @@ class LintProvider:
 
         has_uhf = "UHF" in tokens
         has_rohf = "ROHF" in tokens
-        has_posthf = any(
-            m in tokens
-            for m in ("MP2", "MP3", "MP4", "MP4SDQ", "MP5")
-        )
+        has_posthf = any(m in tokens for m in ("MP2", "MP3", "MP4", "MP4SDQ", "MP5"))
         has_dft = any(
             m in tokens
             for m in (
-                "B3LYP", "PBE", "PBE0", "M06", "M062X", "M06L", "M06HF",
-                "WB97", "WB97X", "WB97XD", "CAM-B3LYP", "BLYP", "BP86",
-                "TPSS", "TPSSH",
+                "B3LYP",
+                "PBE",
+                "PBE0",
+                "M06",
+                "M062X",
+                "M06L",
+                "M06HF",
+                "WB97",
+                "WB97X",
+                "WB97XD",
+                "CAM-B3LYP",
+                "BLYP",
+                "BP86",
+                "TPSS",
+                "TPSSH",
             )
         )
-        has_semi = any(
-            m in tokens
-            for m in ("PM3", "PM6", "PM7", "AM1", "RM1", "MNDO", "MNDOD")
-        )
+        has_semi = any(m in tokens for m in ("PM3", "PM6", "PM7", "AM1", "RM1", "MNDO", "MNDOD"))
 
         if has_uhf or has_rohf or has_dft or has_semi:
             return
@@ -515,17 +605,14 @@ class LintProvider:
 
         tokens = set(self._route_tokens(job.route_section.upper()))
         has_posthf = any(
-            m in tokens
-            for m in ("MP2", "MP3", "MP4", "MP4SDQ", "MP5", "CCSD", "CCSD(T)")
+            m in tokens for m in ("MP2", "MP3", "MP4", "MP4SDQ", "MP5", "CCSD", "CCSD(T)")
         )
         has_loose_scf = "SCFCON" in tokens or "LOOSE" in tokens
 
         if has_posthf and has_loose_scf:
             route_range = Range(
                 start=Position(line=route_line, character=0),
-                end=Position(
-                    line=route_line, character=len(lines[route_line])
-                ),
+                end=Position(line=route_line, character=len(lines[route_line])),
             )
             diagnostics.append(
                 Diagnostic(
@@ -554,9 +641,7 @@ class LintProvider:
 
         route = lines[route_line].strip()
         # ``#`` alone means minimal output; ``#P`` / ``#N`` / ``#T`` are fine.
-        if route == "#" or (
-            route.startswith("#") and len(route) > 1 and route[1] == " "
-        ):
+        if route == "#" or (route.startswith("#") and len(route) > 1 and route[1] == " "):
             diagnostics.append(
                 Diagnostic(
                     range=Range(
@@ -579,7 +664,10 @@ class LintProvider:
     def _serialize(diagnostics: list[Diagnostic]) -> list[dict[str, Any]]:
         """Convert LSP Diagnostic objects to deterministic dicts."""
         severity_order = {
-            "error": 0, "warning": 1, "information": 2, "hint": 3,
+            "error": 0,
+            "warning": 1,
+            "information": 2,
+            "hint": 3,
         }
         snapshot: list[dict[str, Any]] = []
         for diag in diagnostics:

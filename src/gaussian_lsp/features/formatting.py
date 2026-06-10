@@ -20,7 +20,7 @@ Design choices
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+from typing import List
 
 from lsprotocol.types import (
     DocumentFormattingParams,
@@ -130,9 +130,7 @@ class FormattingProvider:
     # Public API
     # ------------------------------------------------------------------
 
-    def format_document(
-        self, text: str, params: DocumentFormattingParams
-    ) -> List[TextEdit]:
+    def format_document(self, text: str, params: DocumentFormattingParams) -> List[TextEdit]:
         """Format the entire document.
 
         Args:
@@ -160,9 +158,7 @@ class FormattingProvider:
             )
         ]
 
-    def format_range(
-        self, text: str, params: DocumentRangeFormattingParams
-    ) -> List[TextEdit]:
+    def format_range(self, text: str, params: DocumentRangeFormattingParams) -> List[TextEdit]:
         """Format a range of lines within the document.
 
         The formatter extracts the lines within the requested range,
@@ -233,10 +229,6 @@ class FormattingProvider:
         """
         if not lines:
             return lines
-
-        indent_size = params.options.tab_size if params.options else 2
-        insert_spaces = params.options.insert_spaces if params.options else True
-        indent_str = " " * indent_size if insert_spaces else "\t"
 
         formatted: List[str] = []
         # Track which structural section we are in.

@@ -18,7 +18,7 @@ Fix categories
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from lsprotocol.types import (
     CodeAction,
@@ -30,10 +30,7 @@ from lsprotocol.types import (
     WorkspaceEdit,
 )
 
-from gaussian_lsp.parser.gjf_parser import (
-    GAUSSIAN_BASIS_SETS,
-    GAUSSIAN_METHODS,
-)
+from gaussian_lsp.parser.gjf_parser import GAUSSIAN_BASIS_SETS, GAUSSIAN_METHODS
 
 # Canonical typo -> correction mapping for route tokens.
 _ROUTE_TYPO_FIXES: Dict[str, str] = {
@@ -92,9 +89,7 @@ class CodeActionProvider:
         self._method_set = frozenset(m.upper() for m in GAUSSIAN_METHODS)
         self._basis_set = frozenset(b.upper() for b in GAUSSIAN_BASIS_SETS)
 
-    def get_code_actions(
-        self, source: str, diagnostics: list[Diagnostic]
-    ) -> list[CodeAction]:
+    def get_code_actions(self, source: str, diagnostics: list[Diagnostic]) -> list[CodeAction]:
         """Get code actions for the given source and diagnostics.
 
         Args:
@@ -127,9 +122,7 @@ class CodeActionProvider:
         lines = source.split("\n")
 
         # --- Route section must start with # ---
-        if "route section must start with #" in message or (
-            "missing route section" in message
-        ):
+        if "route section must start with #" in message or ("missing route section" in message):
             return self._fix_missing_hash(lines, line_num, diagnostic)
 
         # --- Common route typo hints ---
@@ -145,9 +138,7 @@ class CodeActionProvider:
             line_text = lines[line_num].upper() if line_num < len(lines) else ""
             for typo_key, correction in _ROUTE_TYPO_FIXES.items():
                 if typo_key.upper() in line_text:
-                    return self._fix_route_typo(
-                        lines, line_num, diagnostic, typo_key, correction
-                    )
+                    return self._fix_route_typo(lines, line_num, diagnostic, typo_key, correction)
 
         # --- Blank line separators ---
         if "missing blank line after route section" in message:
@@ -256,9 +247,7 @@ class CodeActionProvider:
         before: bool = True,
     ) -> CodeAction:
         """Insert a blank line at the diagnostic position."""
-        insert_pos = Position(
-            line=line_num if before else line_num + 1, character=0
-        )
+        insert_pos = Position(line=line_num if before else line_num + 1, character=0)
         return CodeAction(
             title="Insert missing blank line",
             kind=CodeActionKind.QuickFix,
@@ -462,9 +451,7 @@ class CodeActionProvider:
                                 TextEdit(
                                     range=Range(
                                         start=Position(line=line_num, character=0),
-                                        end=Position(
-                                            line=line_num, character=len(line)
-                                        ),
+                                        end=Position(line=line_num, character=len(line)),
                                     ),
                                     new_text=new_line,
                                 )
@@ -498,9 +485,7 @@ class CodeActionProvider:
                                 TextEdit(
                                     range=Range(
                                         start=Position(line=line_num, character=0),
-                                        end=Position(
-                                            line=line_num, character=len(line)
-                                        ),
+                                        end=Position(line=line_num, character=len(line)),
                                     ),
                                     new_text=new_line,
                                 )

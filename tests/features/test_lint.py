@@ -249,9 +249,16 @@ Test
 H 0.0 0.0 0.0
 """
         diagnostics = provider.lint(content)
-        link0_warnings = [d for d in diagnostics if d.code in (
-            RULE_UNKNOWN_LINK0, RULE_NPROC_UNUSUAL, RULE_MEM_LOW,
-        )]
+        link0_warnings = [
+            d
+            for d in diagnostics
+            if d.code
+            in (
+                RULE_UNKNOWN_LINK0,
+                RULE_NPROC_UNUSUAL,
+                RULE_MEM_LOW,
+            )
+        ]
         assert link0_warnings == []
 
 
@@ -308,9 +315,7 @@ H 0.0 0.0 0.0
 H 0.0 0.0 0.7
 """
         diagnostics = provider.lint(content)
-        freq_without_opt = [
-            d for d in diagnostics if d.code == RULE_FREQ_WITHOUT_OPT
-        ]
+        freq_without_opt = [d for d in diagnostics if d.code == RULE_FREQ_WITHOUT_OPT]
         assert freq_without_opt == []
 
     def test_opt_loose_warning(self, provider: LintProvider) -> None:
@@ -366,9 +371,7 @@ Open shell
 H 0.0 0.0 0.0
 """
         diagnostics = provider.lint(content)
-        open_shell = [
-            d for d in diagnostics if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED
-        ]
+        open_shell = [d for d in diagnostics if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED]
         assert open_shell == []
 
     def test_open_shell_dft_no_warning(self, provider: LintProvider) -> None:
@@ -382,9 +385,7 @@ Open shell DFT
 H 0.0 0.0 0.0
 """
         diagnostics = provider.lint(content)
-        open_shell = [
-            d for d in diagnostics if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED
-        ]
+        open_shell = [d for d in diagnostics if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED]
         assert open_shell == []
 
     def test_closed_shell_no_warning(self, provider: LintProvider) -> None:
@@ -399,9 +400,7 @@ H 0.0 0.0 0.0
 H 0.0 0.0 0.7
 """
         diagnostics = provider.lint(content)
-        open_shell = [
-            d for d in diagnostics if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED
-        ]
+        open_shell = [d for d in diagnostics if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED]
         assert open_shell == []
 
     def test_scf_convergence_posthf_warning(self, provider: LintProvider) -> None:
@@ -520,9 +519,7 @@ class TestLintSnapshot:
 
     def test_snapshot_is_json_serializable(self, provider: LintProvider) -> None:
         """Snapshot should be serializable with json.dumps."""
-        snapshot = provider.snapshot(
-            "#P B3LYP/6-31G(d) opt\n\nT\n\n0 1\nH 0.0 0.0 0.0\n"
-        )
+        snapshot = provider.snapshot("#P B3LYP/6-31G(d) opt\n\nT\n\n0 1\nH 0.0 0.0 0.0\n")
         serialized = json.dumps(snapshot)
         assert isinstance(serialized, str)
         parsed = json.loads(serialized)
@@ -772,7 +769,8 @@ H 0.0 0.0 0.0
         # But post-HF check also won't trigger because HF is not post-HF.
         # The only diagnostic should be no open-shell warning since HF handles it.
         rhf_warnings = [
-            d for d in diagnostics
+            d
+            for d in diagnostics
             if d.code == RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED and "RHF" in d.message
         ]
         assert rhf_warnings == []
@@ -804,11 +802,13 @@ H 0.0 0.0 0.7
     def test_severity_none_defaults_to_error(self, provider: LintProvider) -> None:
         """_severity_name with None should return 'error' (line 161)."""
         from gaussian_lsp.features.lint import _severity_name
+
         assert _severity_name(None) == "error"
 
     def test_snapshot_without_code(self, provider: LintProvider) -> None:
         """Snapshot should handle diagnostics without code field (branch 604->606)."""
         from unittest.mock import patch
+
         from lsprotocol.types import Diagnostic, Position, Range
 
         fake_diag = Diagnostic(

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,6 +18,7 @@ class TestRunnerConfig:
     executable: str = ""
     timeout: float = 30.0
     enabled: bool = False
+
     def validate(self) -> List[str]:
         errors: List[str] = []
         if self.enabled and not self.executable:
@@ -62,15 +63,25 @@ def parse_solver_output(raw: str) -> SolverOutput:
 def solver_output_to_diagnostics(output: SolverOutput) -> List[Diagnostic]:
     diags: List[Diagnostic] = []
     for e in output.errors:
-        diags.append(Diagnostic(
-            range=Range(start=Position(e["line"], 0), end=Position(e["line"], 999)),
-            message=e["message"], severity=DiagnosticSeverity.Error,
-            source="gaussian-test-runner", code="Gauss9001"))
+        diags.append(
+            Diagnostic(
+                range=Range(start=Position(e["line"], 0), end=Position(e["line"], 999)),
+                message=e["message"],
+                severity=DiagnosticSeverity.Error,
+                source="gaussian-test-runner",
+                code="Gauss9001",
+            )
+        )
     for w in output.warnings:
-        diags.append(Diagnostic(
-            range=Range(start=Position(w["line"], 0), end=Position(w["line"], 999)),
-            message=w["message"], severity=DiagnosticSeverity.Warning,
-            source="gaussian-test-runner", code="Gauss9002"))
+        diags.append(
+            Diagnostic(
+                range=Range(start=Position(w["line"], 0), end=Position(w["line"], 999)),
+                message=w["message"],
+                severity=DiagnosticSeverity.Warning,
+                source="gaussian-test-runner",
+                code="Gauss9002",
+            )
+        )
     return diags
 
 
@@ -91,41 +102,85 @@ class TestRunnerProvider:
 
     def run_validation(self, source: str) -> List[Diagnostic]:
         if not self._config.enabled:
-            return [Diagnostic(range=Range(start=Position(0, 0), end=Position(0, 0)),
-                message="Gaussian test runner not enabled.", severity=DiagnosticSeverity.Information,
-                source="gaussian-test-runner", code="Gauss9000")]
+            return [
+                Diagnostic(
+                    range=Range(start=Position(0, 0), end=Position(0, 0)),
+                    message="Gaussian test runner not enabled.",
+                    severity=DiagnosticSeverity.Information,
+                    source="gaussian-test-runner",
+                    code="Gauss9000",
+                )
+            ]
         if not self._config.executable:
-            return [Diagnostic(range=Range(start=Position(0, 0), end=Position(0, 0)),
-                message="Gaussian executable not configured.", severity=DiagnosticSeverity.Warning,
-                source="gaussian-test-runner", code="Gauss9000")]
+            return [
+                Diagnostic(
+                    range=Range(start=Position(0, 0), end=Position(0, 0)),
+                    message="Gaussian executable not configured.",
+                    severity=DiagnosticSeverity.Warning,
+                    source="gaussian-test-runner",
+                    code="Gauss9000",
+                )
+            ]
         import shutil
+
         if not shutil.which(self._config.executable):
-            return [Diagnostic(range=Range(start=Position(0, 0), end=Position(0, 0)),
-                message=f"Gaussian executable not found: {self._config.executable}",
-                severity=DiagnosticSeverity.Error, source="gaussian-test-runner", code="Gauss9000")]
+            return [
+                Diagnostic(
+                    range=Range(start=Position(0, 0), end=Position(0, 0)),
+                    message=f"Gaussian executable not found: {self._config.executable}",
+                    severity=DiagnosticSeverity.Error,
+                    source="gaussian-test-runner",
+                    code="Gauss9000",
+                )
+            ]
         try:
             with tempfile.NamedTemporaryFile(mode="w", suffix=".gjf", delete=False) as f:
                 f.write(source)
                 temp_path = f.name
-            result = subprocess.run([self._config.executable, temp_path],
-                capture_output=True, text=True, timeout=self._config.timeout)
-            return solver_output_to_diagnostics(parse_solver_output(result.stdout + "\n" + result.stderr))
+            result = subprocess.run(  # nosec B603
+                [self._config.executable, temp_path],
+                capture_output=True,
+                text=True,
+                timeout=self._config.timeout,
+            )
+            return solver_output_to_diagnostics(
+                parse_solver_output(result.stdout + "\n" + result.stderr)
+            )
         except subprocess.TimeoutExpired:
-            return [Diagnostic(range=Range(start=Position(0, 0), end=Position(0, 0)),
-                message=f"Gaussian timed out after {self._config.timeout}s.",
-                severity=DiagnosticSeverity.Warning, source="gaussian-test-runner", code="Gauss9003")]
+            return [
+                Diagnostic(
+                    range=Range(start=Position(0, 0), end=Position(0, 0)),
+                    message=f"Gaussian timed out after {self._config.timeout}s.",
+                    severity=DiagnosticSeverity.Warning,
+                    source="gaussian-test-runner",
+                    code="Gauss9003",
+                )
+            ]
         except FileNotFoundError:
-            return [Diagnostic(range=Range(start=Position(0, 0), end=Position(0, 0)),
-                message=f"Gaussian not found: {self._config.executable}",
-                severity=DiagnosticSeverity.Error, source="gaussian-test-runner", code="Gauss9000")]
+            return [
+                Diagnostic(
+                    range=Range(start=Position(0, 0), end=Position(0, 0)),
+                    message=f"Gaussian not found: {self._config.executable}",
+                    severity=DiagnosticSeverity.Error,
+                    source="gaussian-test-runner",
+                    code="Gauss9000",
+                )
+            ]
         finally:
-            try: Path(temp_path).unlink()
-            except (NameError, FileNotFoundError): pass
+            try:
+                Path(temp_path).unlink()
+            except (NameError, FileNotFoundError):
+                pass
 
     def run_with_captured_output(self, captured_output: str) -> List[Diagnostic]:
         return solver_output_to_diagnostics(parse_solver_output(captured_output))
 
     def snapshot_config(self) -> str:
-        return json.dumps({"enabled": self._config.enabled,
-            "executable": self._config.executable or "(not configured)",
-            "timeout": self._config.timeout}, indent=2)
+        return json.dumps(
+            {
+                "enabled": self._config.enabled,
+                "executable": self._config.executable or "(not configured)",
+                "timeout": self._config.timeout,
+            },
+            indent=2,
+        )

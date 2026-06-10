@@ -1,11 +1,16 @@
-import json, pytest
+import json
+
+import pytest
 from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
+
 from gaussian_lsp.features.agent_api import AgentAPIProvider, AgentAPISnapshot
+
 
 class TestSnapshot:
     def test_to_json(self):
         s = AgentAPISnapshot(uri="test", diagnostics=[{"line": 0}])
         assert json.loads(s.to_json())["uri"] == "test"
+
 
 class TestProvider:
     def test_empty(self):
@@ -13,8 +18,15 @@ class TestProvider:
         assert snap.diagnostics == []
 
     def test_with_diagnostics(self):
-        diags = [Diagnostic(range=Range(start=Position(0, 0), end=Position(0, 0)),
-            message="err", severity=DiagnosticSeverity.Error, source="test", code="X1")]
+        diags = [
+            Diagnostic(
+                range=Range(start=Position(0, 0), end=Position(0, 0)),
+                message="err",
+                severity=DiagnosticSeverity.Error,
+                source="test",
+                code="X1",
+            )
+        ]
         snap = AgentAPIProvider().get_snapshot("test", diagnostics=diags)
         assert len(snap.diagnostics) == 1
 

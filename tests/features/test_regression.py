@@ -1,6 +1,10 @@
-import json, pytest
+import json
+
+import pytest
 from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
+
 from gaussian_lsp.features.regression import GoldenFixture, RegressionHarness, RegressionResult
+
 
 class TestHarness:
     def test_empty(self):
