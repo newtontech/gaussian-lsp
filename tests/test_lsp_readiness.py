@@ -1129,9 +1129,7 @@ class TestCodeActions:
     def test_fix_electron_parity(self, provider: CodeActionProvider) -> None:
         """Code action for electron parity mismatch."""
         # The charge/mult line is at line 4 in ELECTRON_PARITY_MISMATCH
-        diag = self._make_diagnostic(
-            "Charge/multiplicity electron count parity mismatch", line=4
-        )
+        diag = self._make_diagnostic("Charge/multiplicity electron count parity mismatch", line=4)
         actions = provider.get_code_actions(ELECTRON_PARITY_MISMATCH, [diag])
         assert len(actions) > 0
         assert any("multiplicity" in a.title.lower() for a in actions)
@@ -1227,7 +1225,9 @@ class TestReferences:
     def test_references_b3lyp(self, provider: ReferencesProvider) -> None:
         """References for B3LYP."""
         pos = Position(line=0, character=3)
-        result = provider.get_references("# B3LYP/6-31G(d) opt\n\nTest\n\n0 1\nH 0 0 0\n", self.URI, pos)
+        result = provider.get_references(
+            "# B3LYP/6-31G(d) opt\n\nTest\n\n0 1\nH 0 0 0\n", self.URI, pos
+        )
         assert len(result) >= 1
 
     def test_references_zmatrix_variable(self, provider: ReferencesProvider) -> None:
@@ -1380,7 +1380,7 @@ class TestRegression:
 
     def test_regression_provider(self) -> None:
         """RegressionHarness is importable and functional."""
-        from gaussian_lsp.features.regression import RegressionHarness, GoldenFixture
+        from gaussian_lsp.features.regression import GoldenFixture, RegressionHarness
 
         harness = RegressionHarness()
         assert harness is not None
@@ -1469,7 +1469,9 @@ class TestDefinitionCoverageGaps:
         result = provider.get_definition(content, self.URI, pos)
         assert result is None
 
-    def test_zmatrix_position_on_variable_not_in_geometry(self, provider: DefinitionProvider) -> None:
+    def test_zmatrix_position_on_variable_not_in_geometry(
+        self, provider: DefinitionProvider
+    ) -> None:
         """Position on a word in geometry that is NOT a variable reference."""
         # In Z-matrix input, "O" at line 5 has no variable refs
         pos = Position(line=5, character=0)  # On "O"
@@ -1662,9 +1664,7 @@ class TestCodeActionsCoverageGaps:
 
     def test_fix_missing_charge_mult(self, provider: CodeActionProvider) -> None:
         """Code action for missing charge/multiplicity."""
-        diag = self._make_diagnostic(
-            "Missing charge/multiplicity line before geometry", line=4
-        )
+        diag = self._make_diagnostic("Missing charge/multiplicity line before geometry", line=4)
         actions = provider.get_code_actions(MISSING_CHARGE_MULT, [diag])
         assert len(actions) > 0
         assert any("charge" in a.title.lower() for a in actions)
@@ -1712,9 +1712,7 @@ class TestCodeActionsCoverageGaps:
     def test_route_hint_typo_nprocshared(self, provider: CodeActionProvider) -> None:
         """Code action for NPROCSHARED in route."""
         content = "# HF/STO-3G nprocshared\n\nTypo\n\n0 1\nH 0 0 0\n"
-        diag = self._make_diagnostic(
-            "Use %nprocshared as a Link0 command, not a route keyword."
-        )
+        diag = self._make_diagnostic("Use %nprocshared as a Link0 command, not a route keyword.")
         actions = provider.get_code_actions(content, [diag])
         assert len(actions) > 0
 
@@ -1732,9 +1730,7 @@ class TestCodeActionsCoverageGaps:
         # Only general actions (add %chk) should appear, not diagnostic-driven ones
         assert all("chk" in a.title.lower() for a in actions) or len(actions) == 0
 
-    def test_fix_method_typo_known_method_not_suggested(
-        self, provider: CodeActionProvider
-    ) -> None:
+    def test_fix_method_typo_known_method_not_suggested(self, provider: CodeActionProvider) -> None:
         """A token that IS a known method should not trigger typo fix."""
         content = "# B3LYP/6-31G(d) sp\n\nTest\n\n0 1\nH 0 0 0\n"
         diag = self._make_diagnostic("No recognizable calculation method found")
@@ -1778,7 +1774,9 @@ H 1 R1
         # Should return None.
         assert result is None
 
-    def test_zmatrix_variable_not_referenced_in_geometry(self, provider: DefinitionProvider) -> None:
+    def test_zmatrix_variable_not_referenced_in_geometry(
+        self, provider: DefinitionProvider
+    ) -> None:
         """Position on a variable-like name not in geometry."""
         content = """\
 # HF/STO-3G
