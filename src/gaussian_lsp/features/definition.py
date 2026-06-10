@@ -16,16 +16,10 @@ from typing import List, Optional
 
 from lsprotocol.types import Location, Position, Range
 
-from gaussian_lsp.parser.gjf_parser import (
-    GAUSSIAN_BASIS_SETS,
-    GAUSSIAN_JOB_TYPES,
-    GAUSSIAN_METHODS,
-)
+from gaussian_lsp.parser.gjf_parser import GAUSSIAN_BASIS_SETS, GAUSSIAN_JOB_TYPES, GAUSSIAN_METHODS
 
 # Re-usable token characters for word extraction.
-_TOKEN_CHARS = frozenset(
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_()*,.="
-)
+_TOKEN_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_()*,.=")
 
 
 def _get_word_at_position(line: str, column: int) -> str:
@@ -167,9 +161,11 @@ class DefinitionProvider:
         word_upper: str,
     ) -> Optional[Location]:
         """Jump to the route line where the keyword appears."""
-        if word_upper not in self._method_set and \
-           word_upper not in self._basis_set and \
-           word_upper not in self._job_type_set:
+        if (
+            word_upper not in self._method_set
+            and word_upper not in self._basis_set
+            and word_upper not in self._job_type_set
+        ):
             return None
 
         for i, line in enumerate(lines):
@@ -205,7 +201,7 @@ class DefinitionProvider:
 
 
 def get_definition_provider() -> DefinitionProvider:
-    """Factory function to create a definition provider.
+    """Create a definition provider.
 
     Returns:
         A new DefinitionProvider instance.

@@ -76,9 +76,7 @@ H  0.000000 -0.758602  0.504284
     def test_valid_input_no_errors(self, provider: DiagnosticProvider) -> None:
         """Valid input should produce zero error-severity diagnostics."""
         diagnostics = provider.get_diagnostics(self.VALID_WATER)
-        errors = [
-            d for d in diagnostics if d.severity == DiagnosticSeverity.Error
-        ]
+        errors = [d for d in diagnostics if d.severity == DiagnosticSeverity.Error]
         assert errors == []
 
     def test_valid_input_returns_list(self, provider: DiagnosticProvider) -> None:
@@ -106,9 +104,7 @@ Bad element
 Xx 0.0 0.0 0.0
 """
         diagnostics = provider.get_diagnostics(content)
-        warnings = [
-            d for d in diagnostics if d.severity == DiagnosticSeverity.Warning
-        ]
+        warnings = [d for d in diagnostics if d.severity == DiagnosticSeverity.Warning]
         assert any("unknown" in d.message.lower() for d in warnings)
 
     def test_no_method_warning(self, provider: DiagnosticProvider) -> None:
@@ -154,9 +150,7 @@ H 0.0 0.0 1.0
 H 1.0 0.0 0.0
 """
         diagnostics = provider.get_diagnostics(content)
-        warnings = [
-            d for d in diagnostics if d.severity == DiagnosticSeverity.Warning
-        ]
+        warnings = [d for d in diagnostics if d.severity == DiagnosticSeverity.Warning]
         assert any("ECP" in d.message for d in warnings)
 
 
@@ -177,9 +171,7 @@ Test
 H 0.0 0.0 0.0
 """
         diagnostics = provider.get_diagnostics(content)
-        errors = [
-            d for d in diagnostics if d.severity == DiagnosticSeverity.Error
-        ]
+        errors = [d for d in diagnostics if d.severity == DiagnosticSeverity.Error]
         assert any("route" in e.message.lower() for e in errors)
 
     def test_missing_atoms(self, provider: DiagnosticProvider) -> None:
@@ -192,9 +184,7 @@ Empty geometry
 0 1
 """
         diagnostics = provider.get_diagnostics(content)
-        errors = [
-            d for d in diagnostics if d.severity == DiagnosticSeverity.Error
-        ]
+        errors = [d for d in diagnostics if d.severity == DiagnosticSeverity.Error]
         assert any("atom" in e.message.lower() for e in errors)
 
     def test_invalid_route_keyword_typo(self, provider: DiagnosticProvider) -> None:
@@ -404,7 +394,7 @@ class TestDiagnosticSnapshotCoverage:
         """Snapshot entry should include 'code' when the diagnostic has one."""
         from unittest.mock import patch
 
-        from lsprotocol.types import Diagnostic, Position, Range, DiagnosticSeverity
+        from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
 
         fake_diag = Diagnostic(
             range=Range(start=Position(line=0, character=0), end=Position(line=0, character=1)),

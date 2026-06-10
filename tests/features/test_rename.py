@@ -23,7 +23,6 @@ from gaussian_lsp.features.rename import (
     get_rename_provider,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -249,9 +248,7 @@ class TestPrepareRename:
 
     def test_cartesian_no_rename(self, provider: RenameProvider) -> None:
         # Cartesian coordinates have no Z-matrix variables to rename
-        result = provider.prepare_rename(
-            CARTESIAN_GJF, Position(line=6, character=10)
-        )
+        result = provider.prepare_rename(CARTESIAN_GJF, Position(line=6, character=10))
         assert result is None
 
     def test_title_rejected(self, provider: RenameProvider) -> None:
@@ -421,38 +418,18 @@ class TestIsValidRename:
 
     def test_valid_variable_rename(self, provider: RenameProvider) -> None:
         text = ZMATRIX_GJF
-        assert (
-            provider.is_valid_rename(
-                text, Position(line=10, character=1), "NewDist"
-            )
-            is True
-        )
+        assert provider.is_valid_rename(text, Position(line=10, character=1), "NewDist") is True
 
     def test_invalid_variable_name(self, provider: RenameProvider) -> None:
         text = ZMATRIX_GJF
-        assert (
-            provider.is_valid_rename(
-                text, Position(line=10, character=1), "1bad"
-            )
-            is False
-        )
+        assert provider.is_valid_rename(text, Position(line=10, character=1), "1bad") is False
 
     def test_not_on_variable(self, provider: RenameProvider) -> None:
         text = ZMATRIX_GJF
-        assert (
-            provider.is_valid_rename(
-                text, Position(line=0, character=5), "MP2"
-            )
-            is False
-        )
+        assert provider.is_valid_rename(text, Position(line=0, character=5), "MP2") is False
 
     def test_empty_document(self, provider: RenameProvider) -> None:
-        assert (
-            provider.is_valid_rename(
-                "", Position(line=0, character=0), "newname"
-            )
-            is False
-        )
+        assert provider.is_valid_rename("", Position(line=0, character=0), "newname") is False
 
 
 # ---------------------------------------------------------------------------

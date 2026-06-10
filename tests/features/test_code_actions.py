@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from lsprotocol.types import (
-    CodeActionKind,
-    Diagnostic,
-    DiagnosticSeverity,
-    Position,
-    Range,
-)
+from lsprotocol.types import CodeActionKind, Diagnostic, DiagnosticSeverity, Position, Range
 
 from gaussian_lsp.features.code_actions import CodeActionProvider
 
@@ -38,7 +32,9 @@ def _apply_action(source: str, action: CodeAction) -> str:
     lines = source.split("\n")
     changes = action.edit.changes.get("document", [])
     # Sort changes in reverse order so earlier edits don't shift later ones.
-    changes_sorted = sorted(changes, key=lambda e: (e.range.start.line, e.range.start.character), reverse=True)
+    changes_sorted = sorted(
+        changes, key=lambda e: (e.range.start.line, e.range.start.character), reverse=True
+    )
     for change in changes_sorted:
         start_line = change.range.start.line
         start_char = change.range.start.character
@@ -50,7 +46,7 @@ def _apply_action(source: str, action: CodeAction) -> str:
         prefix = lines[start_line][:start_char] if start_line < len(lines) else ""
         # Partial line after the edit
         suffix = lines[end_line][end_char:] if end_line < len(lines) else ""
-        after = lines[end_line + 1:] if end_line < len(lines) else []
+        after = lines[end_line + 1 :] if end_line < len(lines) else []
 
         new_lines = (prefix + change.new_text + suffix).split("\n")
         lines = before + new_lines + after
@@ -233,7 +229,10 @@ class TestElectronParityFix:
     def test_toggle_singlet_to_doublet(self, provider: CodeActionProvider) -> None:
         """Singlet (1) is toggled to doublet (2) when parity mismatches."""
         source = "# HF/STO-3G\n\nH radical\n\n0 1\nH 0.0 0.0 0.0\n"
-        diag = _diag(4, "Charge/multiplicity electron count parity mismatch; check total electrons and spin multiplicity.")
+        diag = _diag(
+            4,
+            "Charge/multiplicity electron count parity mismatch; check total electrons and spin multiplicity.",
+        )
         actions = provider.get_code_actions(source, [diag])
 
         assert len(actions) >= 1
@@ -278,7 +277,9 @@ class TestLink0Fix:
     def test_fix_mem_value(self, provider: CodeActionProvider) -> None:
         """Invalid %mem value gets replaced with '4GB'."""
         source = "%mem=abc\n# HF/STO-3G\n\nTitle\n\n0 1\nH 0 0 0\n"
-        diag = _diag(0, "%mem value should include a positive number and optional unit like MB or GB.")
+        diag = _diag(
+            0, "%mem value should include a positive number and optional unit like MB or GB."
+        )
         actions = provider.get_code_actions(source, [diag])
 
         assert len(actions) >= 1

@@ -2,15 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
-from lsprotocol.types import (
-    Diagnostic,
-    DiagnosticSeverity,
-    Position,
-    Range,
-)
+from lsprotocol.types import Diagnostic, DiagnosticSeverity
 from pygls.server import LanguageServer
 
 

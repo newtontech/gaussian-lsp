@@ -10,14 +10,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Dict, FrozenSet, List, Optional, Sequence, Tuple
+from typing import Dict, FrozenSet, List, Optional
 
-from lsprotocol.types import (
-    Diagnostic,
-    DiagnosticSeverity,
-    Position,
-    Range,
-)
+from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
 
 from gaussian_lsp.parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
@@ -67,59 +62,191 @@ _POSITIVE_INT_RE = re.compile(r"^[1-9]\d*$")
 # Known route keywords that accept enum-like options.
 # Each maps the keyword to the set of accepted option strings (uppercased).
 _ENUM_KEYWORDS: Dict[str, FrozenSet[str]] = {
-    "SCF": frozenset({
-        "QC", "DIIS", "SD", "DS", "RMS", "NONE", "XQC", "YQC", "CONVENTIONAL",
-        "DIRECT", "INCORE", "NOINCORE", "CONV", "NOCONV",
-    }),
-    "GUESS": frozenset({
-        "READ", "ALTER", "ONLY", "MIX", "LOW", "HUCKEL", "HONDO",
-        "MOREAD", "ONLY", "ALWAYS", "GEOM", "NONE",
-    }),
-    "POP": frozenset({
-        "NONE", "MINIMAL", "FULL", "MK", "CHELPG", "Hirshfeld", "NBO",
-        "NBOREAD", "NBODEL", "Savenbo", "REG", "ESP", "MKLEwis",
-        "CHELPGLEWIS", "MKIO", "NPA",
-    }),
-    "INTEGRAL": frozenset({
-        "GRID", "FINEGRID", "ULTRAFINE", "SUPERFINE",
-        "COARSEGRID", "PASS", "NOINTEGRALCACHESIZE",
-    }),
-    "OPT": frozenset({
-        "SPT", "TS", "SADDLE", "CALCFC", "CALCALL", "READFC",
-        "NOCALC", "NOEIGENTEST", "HESSIAN", "MODREDUNDANT",
-        "Z-MATRIX", "ZMAT", "LOOSE", "TIGHT", "VERYTIGHT",
-        "MAXCYCLE", "MAXSTEP", "RECALCULATE", "ADDREDUNDANT",
-        "CONSTR", "NOCONST", "RFO", "NR", "EF", "NDOPT",
-    }),
-    "FREQ": frozenset({
-        "READISOTOPES", "RAMAN", "NORAMAN", "HPMODE",
-        "READFCDATA", "ANHARMONIC", "SELECTANHARMONIC",
-        "NOINTERNA", "PSEUDO", "NOANHARMONIC",
-    }),
-    "DENSITY": frozenset({
-        "CURRENT", "CHECKPOINT", "ALL", "ALPHA", "BETA",
-        "MP2", "CI", "QCI", "CC", "NONE",
-    }),
-    "SYMMETRY": frozenset({
-        "FOLLOW", "NOFOLLOW", "INTERIOR", "PGROUP",
-        "MICRO", "INTENSITIES", "LOOSE", "NOSYM", "NONE",
-    }),
-    "SCRF": frozenset({
-        "PCM", "CPCM", "DIPOLE", "IPCM", "SCIPCM", "SMD",
-        "SOLVENT", "READ", "CHECK",
-    }),
-    "TD": frozenset({
-        "NSTATES", "ROOT", "SINGLETS", "TRIPLETS",
-        "50-50", "NROOT", "EQSOLV", "READ",
-    }),
-    "CIS": frozenset({
-        "NSTATES", "ROOT", "SINGLETS", "TRIPLETS",
-        "50-50", "NROOT", "READ", "ADDREAD",
-    }),
-    "IRC": frozenset({
-        "CALCFC", "CALCALL", "RECALCULATE", "MAXPOINTS",
-        "STEP", "FORWARD", "REVERSE", "MAXCYCLE", "READFC",
-    }),
+    "SCF": frozenset(
+        {
+            "QC",
+            "DIIS",
+            "SD",
+            "DS",
+            "RMS",
+            "NONE",
+            "XQC",
+            "YQC",
+            "CONVENTIONAL",
+            "DIRECT",
+            "INCORE",
+            "NOINCORE",
+            "CONV",
+            "NOCONV",
+        }
+    ),
+    "GUESS": frozenset(
+        {
+            "READ",
+            "ALTER",
+            "ONLY",
+            "MIX",
+            "LOW",
+            "HUCKEL",
+            "HONDO",
+            "MOREAD",
+            "ONLY",
+            "ALWAYS",
+            "GEOM",
+            "NONE",
+        }
+    ),
+    "POP": frozenset(
+        {
+            "NONE",
+            "MINIMAL",
+            "FULL",
+            "MK",
+            "CHELPG",
+            "Hirshfeld",
+            "NBO",
+            "NBOREAD",
+            "NBODEL",
+            "Savenbo",
+            "REG",
+            "ESP",
+            "MKLEwis",
+            "CHELPGLEWIS",
+            "MKIO",
+            "NPA",
+        }
+    ),
+    "INTEGRAL": frozenset(
+        {
+            "GRID",
+            "FINEGRID",
+            "ULTRAFINE",
+            "SUPERFINE",
+            "COARSEGRID",
+            "PASS",
+            "NOINTEGRALCACHESIZE",
+        }
+    ),
+    "OPT": frozenset(
+        {
+            "SPT",
+            "TS",
+            "SADDLE",
+            "CALCFC",
+            "CALCALL",
+            "READFC",
+            "NOCALC",
+            "NOEIGENTEST",
+            "HESSIAN",
+            "MODREDUNDANT",
+            "Z-MATRIX",
+            "ZMAT",
+            "LOOSE",
+            "TIGHT",
+            "VERYTIGHT",
+            "MAXCYCLE",
+            "MAXSTEP",
+            "RECALCULATE",
+            "ADDREDUNDANT",
+            "CONSTR",
+            "NOCONST",
+            "RFO",
+            "NR",
+            "EF",
+            "NDOPT",
+        }
+    ),
+    "FREQ": frozenset(
+        {
+            "READISOTOPES",
+            "RAMAN",
+            "NORAMAN",
+            "HPMODE",
+            "READFCDATA",
+            "ANHARMONIC",
+            "SELECTANHARMONIC",
+            "NOINTERNA",
+            "PSEUDO",
+            "NOANHARMONIC",
+        }
+    ),
+    "DENSITY": frozenset(
+        {
+            "CURRENT",
+            "CHECKPOINT",
+            "ALL",
+            "ALPHA",
+            "BETA",
+            "MP2",
+            "CI",
+            "QCI",
+            "CC",
+            "NONE",
+        }
+    ),
+    "SYMMETRY": frozenset(
+        {
+            "FOLLOW",
+            "NOFOLLOW",
+            "INTERIOR",
+            "PGROUP",
+            "MICRO",
+            "INTENSITIES",
+            "LOOSE",
+            "NOSYM",
+            "NONE",
+        }
+    ),
+    "SCRF": frozenset(
+        {
+            "PCM",
+            "CPCM",
+            "DIPOLE",
+            "IPCM",
+            "SCIPCM",
+            "SMD",
+            "SOLVENT",
+            "READ",
+            "CHECK",
+        }
+    ),
+    "TD": frozenset(
+        {
+            "NSTATES",
+            "ROOT",
+            "SINGLETS",
+            "TRIPLETS",
+            "50-50",
+            "NROOT",
+            "EQSOLV",
+            "READ",
+        }
+    ),
+    "CIS": frozenset(
+        {
+            "NSTATES",
+            "ROOT",
+            "SINGLETS",
+            "TRIPLETS",
+            "50-50",
+            "NROOT",
+            "READ",
+            "ADDREAD",
+        }
+    ),
+    "IRC": frozenset(
+        {
+            "CALCFC",
+            "CALCALL",
+            "RECALCULATE",
+            "MAXPOINTS",
+            "STEP",
+            "FORWARD",
+            "REVERSE",
+            "MAXCYCLE",
+            "READFC",
+        }
+    ),
 }
 
 # Known unit-systems keywords in route
@@ -226,9 +353,7 @@ class TypecheckProvider:
     # Required sections
     # ------------------------------------------------------------------
 
-    def _check_required_sections(
-        self, lines: List[str], job: GaussianJob
-    ) -> List[TypecheckResult]:
+    def _check_required_sections(self, lines: List[str], job: GaussianJob) -> List[TypecheckResult]:
         """Validate that all required sections are present.
 
         Reports at most one diagnostic per missing section to avoid
@@ -301,8 +426,7 @@ class TypecheckProvider:
     def _check_route_keyword_types(
         self, lines: List[str], job: GaussianJob
     ) -> List[TypecheckResult]:
-        """Validate that the route section contains a known method, basis set,
-        and job type keyword."""
+        """Validate route method, basis set, and job type keywords."""
         results: List[TypecheckResult] = []
         route_line_idx = self._find_route_line(lines)
         if route_line_idx is None:
@@ -397,8 +521,7 @@ class TypecheckProvider:
                             line=i,
                             character=0,
                             end_character=len(stripped),
-                            message=f"%{key_lower} expects a positive integer, "
-                            f"got '{value}'.",
+                            message=f"%{key_lower} expects a positive integer, " f"got '{value}'.",
                             severity=DiagnosticSeverity.Error,
                         )
                     )
@@ -427,9 +550,7 @@ class TypecheckProvider:
     # Enum option validation
     # ------------------------------------------------------------------
 
-    def _check_enum_options(
-        self, lines: List[str], job: GaussianJob
-    ) -> List[TypecheckResult]:
+    def _check_enum_options(self, lines: List[str], job: GaussianJob) -> List[TypecheckResult]:
         """Validate that keyword options match known enum values."""
         results: List[TypecheckResult] = []
         route_line_idx = self._find_route_line(lines)
@@ -448,9 +569,7 @@ class TypecheckProvider:
         for keyword, valid_options in _ENUM_KEYWORDS.items():
             kw_upper = keyword.upper()
             # Check KEY(OPTIONS) pattern
-            pattern = re.compile(
-                re.escape(kw_upper) + r"\(([^)]+)\)", re.IGNORECASE
-            )
+            pattern = re.compile(re.escape(kw_upper) + r"\(([^)]+)\)", re.IGNORECASE)
             for match in pattern.finditer(route_text):
                 option_str = match.group(1)
                 options = [o.strip().upper() for o in option_str.split(",")]
@@ -478,9 +597,7 @@ class TypecheckProvider:
     # Unit validation
     # ------------------------------------------------------------------
 
-    def _check_units(
-        self, lines: List[str], job: GaussianJob
-    ) -> List[TypecheckResult]:
+    def _check_units(self, lines: List[str], job: GaussianJob) -> List[TypecheckResult]:
         """Validate unit keywords where applicable."""
         results: List[TypecheckResult] = []
         route_line_idx = self._find_route_line(lines)
@@ -488,12 +605,8 @@ class TypecheckProvider:
             return results
 
         route_text = lines[route_line_idx]
-        route_upper = route_text.upper()
-
         for kw, valid_units in _UNIT_KEYWORDS.items():
-            pattern = re.compile(
-                re.escape(kw.upper()) + r"\s*[\(=]\s*(\w+)", re.IGNORECASE
-            )
+            pattern = re.compile(re.escape(kw.upper()) + r"\s*[\(=]\s*(\w+)", re.IGNORECASE)
             for match in pattern.finditer(route_text):
                 unit_value = match.group(1).upper()
                 if unit_value not in valid_units:

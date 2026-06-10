@@ -12,21 +12,15 @@ import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-from lsprotocol.types import (
-    Position,
-    Range,
-    TextEdit,
-    WorkspaceEdit,
-)
+from lsprotocol.types import Position, Range, TextEdit, WorkspaceEdit
 from pygls.server import LanguageServer
 
 from ..parser.gjf_parser import (
     GAUSSIAN_BASIS_SETS,
     GAUSSIAN_JOB_TYPES,
     GAUSSIAN_METHODS,
-    GJFParser,
     LINK0_COMMANDS,
-    VALID_ELEMENTS,
+    GJFParser,
 )
 
 
@@ -50,7 +44,9 @@ class RenameTarget:
 
 
 # Z-matrix variable definition: NAME=numeric_value
-_VAR_DEF_PATTERN = re.compile(r"^\s*([A-Za-z]\w*)\s*=\s*" + r"[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[Ee][+-]?\d+)?\s*$")
+_VAR_DEF_PATTERN = re.compile(
+    r"^\s*([A-Za-z]\w*)\s*=\s*" + r"[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[Ee][+-]?\d+)?\s*$"
+)
 
 # A Z-matrix reference in a geometry line is a non-numeric token at an
 # even position (2, 4, 6) within a Z-matrix coordinate spec.  We identify
@@ -66,7 +62,7 @@ def _canonical_element(element: str) -> str:
 
 
 def _is_gaussian_keyword(word: str) -> bool:
-    """Return True if *word* is a recognised Gaussian keyword, method, basis set, job type, or Link0 command."""
+    """Return True if *word* is a recognized Gaussian keyword."""
     word_upper = word.upper()
     if word_upper in {m.upper() for m in GAUSSIAN_METHODS}:
         return True
@@ -78,10 +74,29 @@ def _is_gaussian_keyword(word: str) -> bool:
         return True
     # Common route keywords
     _ROUTE_KEYWORDS = {
-        "OPT", "FREQ", "SP", "NMR", "POP", "DENSITY", "SCF",
-        "GUESS", "POP", "NOSYMM", "SYMM", "INT", "GRID",
-        "TIGHT", "LOOSE", "MAXCYCLE", "MAXDISK", "CHK", "RWF",
-        "SCRATCH", "MEM", "NPROC", "NPROCSHARED",
+        "OPT",
+        "FREQ",
+        "SP",
+        "NMR",
+        "POP",
+        "DENSITY",
+        "SCF",
+        "GUESS",
+        "POP",
+        "NOSYMM",
+        "SYMM",
+        "INT",
+        "GRID",
+        "TIGHT",
+        "LOOSE",
+        "MAXCYCLE",
+        "MAXDISK",
+        "CHK",
+        "RWF",
+        "SCRATCH",
+        "MEM",
+        "NPROC",
+        "NPROCSHARED",
     }
     if word_upper in _ROUTE_KEYWORDS:
         return True
@@ -128,9 +143,7 @@ def _find_sections(text: str) -> Tuple[Optional[int], Optional[int]]:
     return charge_line, geometry_end
 
 
-def _collect_variable_occurrences(
-    text: str, var_name: str
-) -> List[VariableOccurrence]:
+def _collect_variable_occurrences(text: str, var_name: str) -> List[VariableOccurrence]:
     """Find every definition and reference of a Z-matrix variable in *text*.
 
     Args:
@@ -299,7 +312,14 @@ class RenameProvider:
                 # Check if this is a Z-matrix line (has non-numeric, non-element tokens)
                 for pos in range(2, len(parts), 2):
                     token = parts[pos]
-                    if not token.replace(".", "").replace("-", "").replace("+", "").replace("e", "").replace("E", "").isdigit():
+                    if (
+                        not token.replace(".", "")
+                        .replace("-", "")
+                        .replace("+", "")
+                        .replace("e", "")
+                        .replace("E", "")
+                        .isdigit()
+                    ):
                         # It's a potential variable reference
                         if not _looks_like_number(token):
                             col_start = _find_token_col(line, token, pos, parts)
@@ -311,12 +331,8 @@ class RenameProvider:
                                 has_def = any(o.kind == "definition" for o in occs)
                                 if has_def:
                                     return Range(
-                                        start=Position(
-                                            line=position.line, character=col_start
-                                        ),
-                                        end=Position(
-                                            line=position.line, character=col_end
-                                        ),
+                                        start=Position(line=position.line, character=col_start),
+                                        end=Position(line=position.line, character=col_end),
                                     )
 
         return None
@@ -477,12 +493,8 @@ class RenameProvider:
             changes[uri].append(
                 TextEdit(
                     range=Range(
-                        start=Position(
-                            line=occ.line, character=occ.start_col
-                        ),
-                        end=Position(
-                            line=occ.line, character=occ.end_col
-                        ),
+                        start=Position(line=occ.line, character=occ.start_col),
+                        end=Position(line=occ.line, character=occ.end_col),
                     ),
                     new_text=new_name,
                 )

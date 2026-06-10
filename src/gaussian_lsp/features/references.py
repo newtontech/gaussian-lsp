@@ -15,16 +15,10 @@ from typing import List, Optional
 
 from lsprotocol.types import Location, Position, Range
 
-from gaussian_lsp.parser.gjf_parser import (
-    GAUSSIAN_BASIS_SETS,
-    GAUSSIAN_JOB_TYPES,
-    GAUSSIAN_METHODS,
-)
+from gaussian_lsp.parser.gjf_parser import GAUSSIAN_BASIS_SETS, GAUSSIAN_JOB_TYPES, GAUSSIAN_METHODS
 
 # Re-usable token characters for word extraction.
-_TOKEN_CHARS = frozenset(
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_()*,."
-)
+_TOKEN_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_()*,.")
 
 
 def _get_word_at_position(line: str, column: int) -> str:
@@ -85,9 +79,7 @@ class ReferencesProvider:
         locations: List[Location] = []
 
         # 1. Z-matrix variable references
-        locations.extend(
-            self._references_zmatrix_variable(lines, uri, word, include_declaration)
-        )
+        locations.extend(self._references_zmatrix_variable(lines, uri, word, include_declaration))
 
         # 2. Route keyword references
         locations.extend(
@@ -181,9 +173,11 @@ class ReferencesProvider:
         include_declaration: bool,
     ) -> List[Location]:
         """Find all occurrences of a route keyword in the route section."""
-        if word_upper not in self._method_set and \
-           word_upper not in self._basis_set and \
-           word_upper not in self._job_type_set:
+        if (
+            word_upper not in self._method_set
+            and word_upper not in self._basis_set
+            and word_upper not in self._job_type_set
+        ):
             return []
 
         locations: List[Location] = []
@@ -227,7 +221,7 @@ class ReferencesProvider:
 
 
 def get_references_provider() -> ReferencesProvider:
-    """Factory function to create a references provider.
+    """Create a references provider.
 
     Returns:
         A new ReferencesProvider instance.
