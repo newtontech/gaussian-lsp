@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.link0.invalid_nproc",
+  "code": "GAUSS-E033",
+  "severity": "error",
+  "description": "%nprocshared value is not a positive integer.",
+  "input": "%nprocshared=abc\n# B3LYP/6-31G(d)\n\nTitle\n\n0 1\nO 0 0 0\n",
+  "expected": {
+    "code": "GAUSS-E033",
+    "rule": "gaussian.link0.invalid_nproc",
+    "severity": "error"
+  }
+}

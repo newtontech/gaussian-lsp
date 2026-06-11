@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.input.invalid_charge_multiplicity",
+  "code": "GAUSS-E031",
+  "severity": "error",
+  "description": "Charge/multiplicity line is not two integers or multiplicity < 1.",
+  "input": "# B3LYP/6-31G(d)\n\nTitle\n\nneutral singlet\nO 0 0 0\n",
+  "expected": {
+    "code": "GAUSS-E031",
+    "rule": "gaussian.input.invalid_charge_multiplicity",
+    "severity": "error"
+  }
+}

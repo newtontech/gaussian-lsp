@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.route.method_basis_incompatibility",
+  "code": "GAUSS-W031",
+  "severity": "warning",
+  "description": "Suspicious method/basis set combination (e.g. CCSD/STO-3G).",
+  "input": "# CCSD/STO-3G\n\nTitle\n\n0 1\nHe 0 0 0\n",
+  "expected": {
+    "code": "GAUSS-W031",
+    "rule": "gaussian.route.method_basis_incompatibility",
+    "severity": "warning"
+  }
+}
