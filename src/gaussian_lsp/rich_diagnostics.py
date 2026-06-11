@@ -80,7 +80,7 @@ def _legacy_payload(obj: Any) -> dict[str, Any]:
     if isinstance(obj, dict):
         return dict(obj)
     if is_dataclass(obj):
-        return asdict(obj)
+        return asdict(obj)  # type: ignore[arg-type]
     to_json = getattr(obj, "to_json", None)
     if callable(to_json):
         try:
