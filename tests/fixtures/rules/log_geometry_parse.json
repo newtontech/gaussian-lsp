@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.log.geometry_parse_failure",
+  "code": "GAUSS-E035",
+  "severity": "error",
+  "description": "Geometry parsing failure detected in Gaussian log output.",
+  "input": " Reading geometry.\n Error in geometry specification.\n",
+  "expected": {
+    "code": "GAUSS-E035",
+    "rule": "gaussian.log.geometry_parse_failure",
+    "severity": "error"
+  }
+}

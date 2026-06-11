@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.route.unknown_keyword",
+  "code": "GAUSS-W030",
+  "severity": "warning",
+  "description": "Route keyword not in known Gaussian keyword set.",
+  "input": "# B3LYP/6-31G(d) foobar\n\nTitle\n\n0 1\nO 0 0 0\n",
+  "expected": {
+    "code": "GAUSS-W030",
+    "rule": "gaussian.route.unknown_keyword",
+    "severity": "warning"
+  }
+}

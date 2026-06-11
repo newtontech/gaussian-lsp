@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.link0.invalid_memory",
+  "code": "GAUSS-E032",
+  "severity": "error",
+  "description": "%mem value is not valid: must be number + unit (GB, MB, KB, etc.).",
+  "input": "%mem=abc\n# B3LYP/6-31G(d)\n\nTitle\n\n0 1\nO 0 0 0\n",
+  "expected": {
+    "code": "GAUSS-E032",
+    "rule": "gaussian.link0.invalid_memory",
+    "severity": "error"
+  }
+}

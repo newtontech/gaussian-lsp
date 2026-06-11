@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.log.scf_not_converged",
+  "code": "GAUSS-E034",
+  "severity": "error",
+  "description": "SCF convergence failure detected in Gaussian log output.",
+  "input": " SCF Done:  E(RB3LYP) =  -76.12345\n Convergence failure\n",
+  "expected": {
+    "code": "GAUSS-E034",
+    "rule": "gaussian.log.scf_not_converged",
+    "severity": "error"
+  }
+}
