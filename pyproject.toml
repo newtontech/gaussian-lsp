@@ -31,6 +31,7 @@ dev = [
 
 [project.scripts]
 gaussian-lsp = "gaussian_lsp.server:main"
+gaussian-lsp-tool = "gaussian_lsp.tool:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gaussian_lsp"]
@@ -72,3 +73,4 @@ exclude_lines = [
     "..."
 ]
 fail_under = 95
+
