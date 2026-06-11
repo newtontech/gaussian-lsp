@@ -1,0 +1,42 @@
+{
+  "capability": "agent-api",
+  "issues": [47, 48, 49, 54, 55, 65],
+  "functions": [
+    "describeDomainLanguage",
+    "lookupRouteKeyword",
+    "lookupLink0Command",
+    "getExamples",
+    "nextTokenSuggestions",
+    "getCodeIntelligenceAPI",
+    "validateInput",
+    "dryRunOptions",
+    "getRuleManifest",
+    "openqcSmoke"
+  ],
+  "domain_language": {
+    "languageId": "gaussian-input",
+    "fileExtensions": [".gjf", ".com"],
+    "sections": ["link0", "route", "title", "chargeMultiplicity", "geometry"]
+  },
+  "route_keywords_count": 40,
+  "link0_commands_count": 11,
+  "examples_count": 6,
+  "validation_rules": [
+    "GAUSS-E030",
+    "GAUSS-E031",
+    "GAUSS-E032",
+    "GAUSS-E033",
+    "GAUSS-W030",
+    "GAUSS-W031",
+    "GAUSS-E034",
+    "GAUSS-E035"
+  ],
+  "smoke_checks": [
+    "describeDomainLanguage returns structured result",
+    "validateInput accepts valid .gjf content",
+    "validateInput rejects invalid .gjf content",
+    "parseLog detects SCF and geometry errors",
+    "getRuleManifest returns 8 rules",
+    "lookupRouteKeyword finds known keyword opt"
+  ]
+}
