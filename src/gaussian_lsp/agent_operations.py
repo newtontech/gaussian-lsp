@@ -57,7 +57,11 @@ def operation_path(
     path = Path(path)
     file_type = file_type_func(path)
     text = _read_text(path)
-    diagnostics = _safe_collect_diagnostics(path, collect_diagnostics) if operation == "fix" else []
+    diagnostics = (
+        _safe_collect_diagnostics(path, collect_diagnostics)
+        if operation in {"context", "complete", "hover", "fix"}
+        else []
+    )
     payload = agent_check_payload(
         software=software,
         uri=path.resolve().as_uri(),
@@ -408,7 +412,7 @@ def _call_provider(fn: Callable[..., Any], *values: Any) -> Any:
         if param.default is inspect.Parameter.empty
         and param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
     ]
-    attempts: list[tuple[Any, ...]] = [(), values[:1], values[:2], values[:3]]
+    attempts: list[tuple[Any, ...]] = [(), values[:1], values[:2], values[:3], values[:4]]
     for args in attempts:
         if len(args) < len(required):
             continue

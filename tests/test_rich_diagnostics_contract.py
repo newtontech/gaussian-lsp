@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from gaussian_lsp import agent_operations as ops
 from gaussian_lsp import tool
 from gaussian_lsp.agent_lsp import AgentLSP
 from gaussian_lsp.rich_diagnostics import (
@@ -213,3 +214,200 @@ def test_tool_collect_diagnostics_and_file_type_smoke(tmp_path) -> None:
     assert tool._file_type(input_path) == "gjf"
     assert tool._file_type(tmp_path / "INCAR") == "INCAR"
     assert tool._file_type(tmp_path / "README") == "readme"
+
+
+def test_agent_operations_provider_and_generic_paths(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    input_path = tmp_path / "calc.gjf"
+    input_path.write_text(
+        "# HF/STO-3G\n%mem=1GB\n&CONTROL\nmethod B3LYP\n",
+        encoding="utf-8",
+    )
+    diagnostic = {
+        "code": "GAUSSIAN001",
+        "severity": "error",
+        "message": "unknown route keyword",
+        "range": {
+            "start": {"line": 1, "character": 1},
+            "end": {"line": 1, "character": 4},
+        },
+        "source": "test",
+        "fix_hints": ["Use a documented Gaussian keyword"],
+        "manual_ref": "Gaussian route section",
+        "blocking": True,
+    }
+
+    fake_completion = SimpleNamespace(
+        completion_items=lambda path, text, file_type: [
+            {"label": "Opt", "detail": "Geometry optimization"},
+            {"name": "Opt", "detail": "duplicate"},
+            {"insertText": "Freq", "documentation": "Frequency calculation"},
+        ]
+    )
+    fake_hover = SimpleNamespace(
+        hover=lambda token, path, text, file_type: f"doc:{token}" if token == "mem" else None
+    )
+    fake_symbols = SimpleNamespace(
+        document_symbols=lambda path, text: [
+            {"name": "Route", "line": 1, "column": 1, "detail": "route section"},
+            SimpleNamespace(name="ObjectSymbol", kind="symbol"),
+        ]
+    )
+
+    def fake_import(module_name: str):
+        if module_name.endswith(".completion"):
+            return fake_completion
+        if module_name.endswith(".hover"):
+            return fake_hover
+        if module_name.endswith(".symbols"):
+            return fake_symbols
+        return None
+
+    monkeypatch.setattr(ops, "_import_optional", fake_import)
+
+    complete_payload = ops.operation_path(
+        input_path,
+        "complete",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+    )
+    assert [item["label"] for item in complete_payload["items"]] == ["Opt", "Freq"]
+    assert complete_payload["capabilities"]["status"] == "available"
+
+    hover_payload = ops.operation_path(
+        input_path,
+        "hover",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+        line=1,
+        character=2,
+    )
+    assert hover_payload["contents"] == "doc:mem"
+
+    symbols_payload = ops.operation_path(
+        input_path,
+        "symbols",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+    )
+    assert [item["name"] for item in symbols_payload["items"]] == [
+        "Route",
+        "ObjectSymbol",
+    ]
+
+    context_payload = ops.operation_path(
+        input_path,
+        "context",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+        line=1,
+        character=2,
+    )
+    assert context_payload["context"]["nearby_symbols"]
+
+    fix_payload = ops.operation_path(
+        input_path,
+        "fix",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+        line=1,
+        character=2,
+    )
+    assert fix_payload["actions"][0]["title"] == "Use a documented Gaussian keyword"
+    assert fix_payload["actions"][0]["blocking"] is True
+
+    unknown_payload = ops.operation_path(
+        input_path,
+        "unknown",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+    )
+    assert unknown_payload["capabilities"]["status"] == "unavailable"
+
+
+def test_agent_operations_generic_fallbacks_and_error_boundaries(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    input_path = tmp_path / "calc.gjf"
+    input_path.write_text(
+        "&SECTION\nkeyword value\nplain\n",
+        encoding="utf-8",
+    )
+    diagnostic = {
+        "code": "GAUSSIANWARN",
+        "severity": "warning",
+        "message": "needs review",
+        "range": {
+            "start": {"line": 1, "character": 0},
+            "end": {"line": 1, "character": 7},
+        },
+        "fix_hints": [],
+        "manual_ref": "Manual section",
+    }
+
+    monkeypatch.setattr(ops, "_import_optional", lambda module_name: None)
+
+    complete_payload = ops.operation_path(
+        input_path,
+        "complete",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+    )
+    labels = {item["label"] for item in complete_payload["items"]}
+    assert {"SECTION", "keyword"} <= labels
+
+    hover_payload = ops.operation_path(
+        input_path,
+        "hover",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+        line=1,
+        character=2,
+    )
+    assert "GAUSSIANWARN" in hover_payload["contents"]
+    assert "Manual section" in hover_payload["contents"]
+
+    symbols_payload = ops.operation_path(
+        input_path,
+        "symbols",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+    )
+    assert [item["kind"] for item in symbols_payload["items"]] == ["section", "property"]
+
+    fix_payload = ops.operation_path(
+        input_path,
+        "fix",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [diagnostic],
+    )
+    assert fix_payload["actions"][0]["title"].startswith("Review this diagnostic")
+
+    failed_fix_payload = ops.operation_path(
+        input_path,
+        "fix",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: (_ for _ in ()).throw(OSError("boom")),
+    )
+    assert failed_fix_payload["diagnostics"][0]["code"] == "agent.operation.diagnostics_failed"
+
+    missing_payload = ops.operation_path(
+        tmp_path / "missing.gjf",
+        "complete",
+        software="gaussian",
+        file_type_func=tool._file_type,
+        collect_diagnostics=lambda path: [],
+    )
+    assert missing_payload["capabilities"]["status"] == "unavailable"
