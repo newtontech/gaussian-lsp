@@ -11,3 +11,7 @@ htmlcov/
 *.vsix
 node_modules/
 .vscode/
+
+# Compiled TypeScript output
+src/parsers/*.js
+tests/parsers/*.js
