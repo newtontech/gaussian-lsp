@@ -413,13 +413,16 @@ def _call_provider(fn: Callable[..., Any], *values: Any) -> Any:
         and param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
     ]
     attempts: list[tuple[Any, ...]] = [(), values[:1], values[:2], values[:3], values[:4]]
+    last_error: Exception | None = None
     for args in attempts:
         if len(args) < len(required):
             continue
         try:
             return fn(*args[: len(signature.parameters)])
-        except Exception:
-            continue
+        except Exception as exc:
+            last_error = exc
+    if last_error is not None:
+        return None
     return None
 
 
