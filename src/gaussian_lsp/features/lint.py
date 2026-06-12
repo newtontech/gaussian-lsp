@@ -240,7 +240,7 @@ _TYPO_MAP: dict[str, str] = {
 
 def _severity_name(severity: int | None) -> str:
     """Map numeric severity to a stable string label."""
-    mapping = {
+    mapping: dict[object, str] = {
         DiagnosticSeverity.Error: "error",
         DiagnosticSeverity.Warning: "warning",
         DiagnosticSeverity.Information: "information",
