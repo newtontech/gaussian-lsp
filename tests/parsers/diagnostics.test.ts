@@ -100,6 +100,16 @@ describe('#58 gaussian.input.invalid_charge_multiplicity (GAUSS-E031)', () => {
     const diags = parseAndDiagnose(text);
     expect(diags.find(d => d.code === 'GAUSS-E031')).toBeUndefined();
   });
+
+  it('reports parser-provided invalid multiplicity and locates charge line', () => {
+    const text = `%mem=8GB\n# B3LYP/6-31G(d)\n\nTitle\n\n0 1\nO 0 0 0\n`;
+    const input = new GJFParser().parse(text);
+    const diags = diagnose({ ...input, multiplicity: 0 }, text);
+    const e = diags.find(d => d.code === 'GAUSS-E031');
+    expect(e).toBeDefined();
+    expect(e!.line).toBe(5);
+    expect(e!.message).toContain('Invalid multiplicity 0');
+  });
 });
 
 // ===========================================================================

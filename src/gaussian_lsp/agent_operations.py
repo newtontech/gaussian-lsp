@@ -10,10 +10,11 @@ from __future__ import annotations
 import importlib
 import inspect
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
-from .rich_diagnostics import agent_check_payload, diagnostic_to_dict
+from .rich_diagnostics import agent_check_payload
 
 OPERATIONS = ("check", "context", "complete", "hover", "symbols", "fix")
 _WORD_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_.$%+-]*")
@@ -84,7 +85,9 @@ def operation_path(
             items = _generic_completion_items(text, payload["diagnostics"])
         payload["items"] = items
         status = "available" if items else "unavailable"
-        reason = None if items else "No completion provider or extractable symbols for this document."
+        reason = (
+            None if items else "No completion provider or extractable symbols for this document."
+        )
         return with_capabilities(payload, operation, status=status, reason=reason)
 
     if operation == "hover":
@@ -109,7 +112,9 @@ def operation_path(
         actions = _fix_actions(payload["diagnostics"], line=line, character=character)
         payload["actions"] = actions
         status = "available" if actions else "unavailable"
-        reason = None if actions else "No safe quick-fix hints are available for current diagnostics."
+        reason = (
+            None if actions else "No safe quick-fix hints are available for current diagnostics."
+        )
         return with_capabilities(payload, operation, status=status, reason=reason)
 
     return with_capabilities(
@@ -161,8 +166,8 @@ def _context_for(text: str, position: dict[str, int]) -> dict[str, Any]:
             "start": {"line": line_no, "character": start},
             "end": {"line": line_no, "character": end},
         },
-        "before": lines[max(0, line_no - 3):line_no],
-        "after": lines[line_no + 1:line_no + 4],
+        "before": lines[max(0, line_no - 3) : line_no],
+        "after": lines[line_no + 1 : line_no + 4],
     }
 
 
@@ -188,9 +193,11 @@ def _diagnostics_at_position(
         end_line = int(end.get("line", start_line) or start_line)
         start_char = int(start.get("character", 0) or 0)
         end_char = int(end.get("character", start_char + 1) or (start_char + 1))
-        if start_line <= line <= end_line and (
-            line != start_line or character >= start_char
-        ) and (line != end_line or character <= end_char):
+        if (
+            start_line <= line <= end_line
+            and (line != start_line or character >= start_char)
+            and (line != end_line or character <= end_char)
+        ):
             selected.append(item)
     return selected
 
@@ -277,16 +284,17 @@ def _symbols_for(path: Path, text: str) -> list[dict[str, Any]]:
     return _generic_symbols(text)
 
 
-def _generic_completion_items(
-    text: str, diagnostics: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
+def _generic_completion_items(text: str, diagnostics: list[dict[str, Any]]) -> list[dict[str, Any]]:
     labels: dict[str, str] = {}
     for symbol in _generic_symbols(text):
         labels.setdefault(symbol["name"], symbol.get("detail", "Document symbol"))
     for diagnostic in diagnostics:
         for hint in diagnostic.get("fix_hints") or []:
             if isinstance(hint, str) and hint.strip():
-                labels.setdefault(hint.strip(), f"Fix hint for {diagnostic.get('code', 'diagnostic')}")
+                labels.setdefault(
+                    hint.strip(),
+                    f"Fix hint for {diagnostic.get('code', 'diagnostic')}",
+                )
         manual_ref = diagnostic.get("manual_ref")
         if isinstance(manual_ref, str) and manual_ref.strip():
             labels.setdefault(manual_ref.strip(), "Manual reference")

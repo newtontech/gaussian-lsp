@@ -127,9 +127,7 @@ def test_serialize_diagnostics_is_stable() -> None:
     assert [item["code"] for item in items] == ["A", "B"]
 
 
-def test_agent_lsp_text_path_and_reserved_operations(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:
+def test_agent_lsp_text_path_and_operations(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     calls = []
 
     def fake_check_path(path):
@@ -155,9 +153,17 @@ def test_agent_lsp_text_path_and_reserved_operations(
     assert path_payload["uri"] == input_path.resolve().as_uri()
 
     assert agent.context(1, 2)["position"] == {"line": 1, "character": 2}
-    assert agent.complete()["items"] == []
-    assert agent.hover()["contents"] is None
-    assert agent.symbols()["items"] == []
+    complete_payload = agent.complete()
+    assert complete_payload["capabilities"]["operation"] == "complete"
+    assert "items" in complete_payload
+
+    hover_payload = agent.hover()
+    assert hover_payload["capabilities"]["operation"] == "hover"
+    assert "contents" in hover_payload
+
+    symbols_payload = agent.symbols()
+    assert symbols_payload["capabilities"]["operation"] == "symbols"
+    assert "items" in symbols_payload
 
 
 def test_tool_main_emits_json_and_fail_on_blocking(
@@ -193,9 +199,10 @@ def test_tool_main_emits_json_and_fail_on_blocking(
     capsys.readouterr()
 
     assert tool.main(["hover", str(input_path)]) == 0
-    reserved = json.loads(capsys.readouterr().out)
-    assert reserved["operation"] == "hover"
-    assert "reserved" in reserved["summary"]["note"]
+    hover_payload = json.loads(capsys.readouterr().out)
+    assert hover_payload["operation"] == "hover"
+    assert hover_payload["capabilities"]["operation"] == "hover"
+    assert hover_payload["capabilities"]["status"] in {"available", "unavailable"}
 
 
 def test_tool_collect_diagnostics_and_file_type_smoke(tmp_path) -> None:
