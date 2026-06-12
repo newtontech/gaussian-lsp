@@ -117,7 +117,7 @@ def _severity_name(severity: int | None) -> str:
     Returns:
         Human-readable severity name.
     """
-    mapping = {
+    mapping: dict[object, str] = {
         DiagnosticSeverity.Error: "error",
         DiagnosticSeverity.Warning: "warning",
         DiagnosticSeverity.Information: "information",
