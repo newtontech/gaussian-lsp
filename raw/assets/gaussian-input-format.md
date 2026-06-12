@@ -38,7 +38,7 @@ Opt job
 
 0 1
 atomic coordinates...
-                    
+
 3 8    Add a bond and an angle to the internal
 2 1 3  coordinates used during the geom. opt.
 ```

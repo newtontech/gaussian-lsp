@@ -41,7 +41,7 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           set -euo pipefail
-          git fetch origin "$BASE_REF" --depth=1
+          git fetch origin "$BASE_REF"
           changed="$(git diff --name-only "origin/${BASE_REF}"...HEAD)"
           printf '%s\n' "$changed"
 
