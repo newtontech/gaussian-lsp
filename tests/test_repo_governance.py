@@ -36,7 +36,5 @@ def test_raw_assets_markdown_has_no_trailing_whitespace() -> None:
 
 
 def test_pr_contract_fetch_has_merge_base() -> None:
-    workflow = (REPO_ROOT / ".github" / "workflows" / "pr-contract.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (REPO_ROOT / ".github" / "workflows" / "pr-contract.yml").read_text(encoding="utf-8")
     assert 'git fetch origin "$BASE_REF" --depth=1' not in workflow
