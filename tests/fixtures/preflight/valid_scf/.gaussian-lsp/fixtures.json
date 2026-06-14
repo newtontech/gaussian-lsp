@@ -1,0 +1,40 @@
+{
+  "fixtures": [
+    {
+      "name": "valid_scf",
+      "path": "tests/fixtures/preflight/valid_scf/input.gjf",
+      "expect_ok": true,
+      "expect_codes": []
+    },
+    {
+      "name": "missing_route",
+      "path": "tests/fixtures/preflight/missing_route/input.gjf",
+      "expect_ok": false,
+      "expect_codes": ["GAUSSIAN601"]
+    },
+    {
+      "name": "missing_basis",
+      "path": "tests/fixtures/preflight/missing_basis/input.gjf",
+      "expect_ok": false,
+      "expect_codes": ["GAUSSIAN603"]
+    },
+    {
+      "name": "guess_read_no_oldchk",
+      "path": "tests/fixtures/preflight/guess_read_no_oldchk/input.gjf",
+      "expect_ok": false,
+      "expect_codes": ["GAUSSIAN604"]
+    },
+    {
+      "name": "low_mem",
+      "path": "tests/fixtures/preflight/low_mem/input.gjf",
+      "expect_ok": true,
+      "expect_codes": ["GAUSSIAN606"]
+    },
+    {
+      "name": "method_basis_mismatch",
+      "path": "tests/fixtures/preflight/method_basis_mismatch/input.gjf",
+      "expect_ok": false,
+      "expect_codes": ["GAUSSIAN609"]
+    }
+  ]
+}

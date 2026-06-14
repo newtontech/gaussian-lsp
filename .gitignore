@@ -15,3 +15,6 @@ node_modules/
 # Compiled TypeScript output
 src/parsers/*.js
 tests/parsers/*.js
+
+# Local agent worktrees
+.worktrees/

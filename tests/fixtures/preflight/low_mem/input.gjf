@@ -1,0 +1,11 @@
+! %mem below the conservative workflow threshold (warning, non-blocking)
+%mem=100MB
+%nproc=4
+# B3LYP/6-31G*
+
+water single point
+
+0 1
+O     0.000000   0.000000   0.117489
+H     0.000000   0.757210  -0.469957
+H     0.000000  -0.757210  -0.469957
