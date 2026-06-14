@@ -1,0 +1,11 @@
+! MP2 correlated method paired with a minimal STO-3G basis (schema mismatch)
+%mem=1GB
+%nproc=4
+# MP2/STO-3G
+
+water single point
+
+0 1
+O     0.000000   0.000000   0.117489
+H     0.000000   0.757210  -0.469957
+H     0.000000  -0.757210  -0.469957

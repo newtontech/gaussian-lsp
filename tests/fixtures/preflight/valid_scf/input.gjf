@@ -1,0 +1,11 @@
+! Valid B3LYP/6-31G* optimization on water - clean preflight baseline
+%mem=1GB
+%nproc=4
+# B3LYP/6-31G* Opt
+
+water optimization
+
+0 1
+O     0.000000   0.000000   0.117489
+H     0.000000   0.757210  -0.469957
+H     0.000000  -0.757210  -0.469957

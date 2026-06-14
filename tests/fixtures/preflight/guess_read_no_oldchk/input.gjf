@@ -1,0 +1,11 @@
+! Route declares guess=read but no %oldchk checkpoint to source restart orbitals
+%mem=1GB
+%nproc=4
+# B3LYP/6-31G* guess=read
+
+restart from previous run
+
+0 1
+O     0.000000   0.000000   0.117489
+H     0.000000   0.757210  -0.469957
+H     0.000000  -0.757210  -0.469957

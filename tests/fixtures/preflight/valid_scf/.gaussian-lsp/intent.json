@@ -1,0 +1,5 @@
+{
+  "software": "gaussian",
+  "schema_source": "gaussian-lsp builtin",
+  "ecutwfc_warning_ry_note": "Gaussian has no ecutwfc keyword; memory gating uses %mem (MB/GB) instead."
+}
