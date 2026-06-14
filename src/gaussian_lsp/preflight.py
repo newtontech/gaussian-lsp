@@ -38,12 +38,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .parser.gjf_parser import (
-    GAUSSIAN_BASIS_SETS,
-    GAUSSIAN_METHODS,
-    GaussianJob,
-    GJFParser,
-)
+from .parser.gjf_parser import GAUSSIAN_BASIS_SETS, GAUSSIAN_METHODS, GaussianJob, GJFParser
 
 # --- Artifact-role model ---------------------------------------------------
 
@@ -1289,7 +1284,7 @@ _LINK0_RE = re.compile(r"^\s*%[A-Za-z]", re.MULTILINE)
 
 
 def looks_like_gaussian_workspace(path: Path) -> bool:
-    """True when a path is a real Gaussian generated-input artifact.
+    """Report whether a path is a real Gaussian generated-input artifact.
 
     Preflight accepts either a ``.gjf``/``.com`` file or a directory containing
     one; a directory with no Gaussian input falls back to the legacy
@@ -1332,7 +1327,7 @@ _CHARGE_MULT_RE = re.compile(r"^\s*[+-]?\d+\s+\d+\s*$", re.MULTILINE)
 
 
 def _looks_like_complete_gaussian_file(path: Path) -> bool:
-    """True when a single file carries both a route marker and a molecule spec.
+    """Detect whether a single file carries both a route marker and a molecule spec.
 
     A bare route fragment (``# bad``) is intentionally *not* a workspace: it
     has no charge/multiplicity line and no atoms, so the cross-artifact checks

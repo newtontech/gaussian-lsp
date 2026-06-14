@@ -53,7 +53,7 @@ def _load_intent(path: Path) -> dict[str, Any] | None:
 
 
 def _looks_like_workspace(path: Path) -> bool:
-    """True when a path is a real Gaussian generated-input workspace.
+    """Detect whether a path is a real Gaussian generated-input workspace.
 
     Preflight needs a parseable Gaussian input to build a meaningful
     cross-artifact graph; a directory with no ``.gjf``/``.com`` falls back to
