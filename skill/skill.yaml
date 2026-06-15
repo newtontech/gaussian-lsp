@@ -10,8 +10,8 @@ entrypoints:
   server: gaussian-lsp
   tool: gaussian-lsp-tool
 file_patterns:
-  - *.gjf
-  - *.com
+  - "*.gjf"
+  - "*.com"
 operations:
   - capabilities
   - check
