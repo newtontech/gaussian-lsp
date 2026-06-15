@@ -71,7 +71,7 @@ done
 # 4. Check source files
 echo ""
 echo "--- 4. Source files ---"
-for f in src/gaussian_lsp/rich_diagnostics.py src/gaussian_lsp/analyzer.py; do
+for f in src/gaussian_lsp/rich_diagnostics.py src/gaussian_lsp/tool.py src/gaussian_lsp/parser/gjf_parser.py; do
     if [ -f "$REPO_ROOT/$f" ]; then
         echo "OK: $f exists"
     else

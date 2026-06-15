@@ -1,0 +1,119 @@
+"""Closed-loop fixture tests for agent CLI and DiagnosticEnvelope/v1.
+
+Covers issue #80: valid/invalid golden fixtures, fix previews, manifest/smoke
+evidence, and stable envelope JSON from ``gaussian-lsp-tool check``.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from gaussian_lsp import tool
+
+FIXTURES = Path(__file__).parent / "fixtures"
+RULES = FIXTURES / "rules"
+LOG_FIXTURES = FIXTURES / "log"
+
+
+class TestDiagnosticEnvelopeV1:
+    @pytest.mark.parametrize(
+        "fixture",
+        ["water_sp.gjf", "formaldehyde_opt_freq.gjf"],
+    )
+    def test_valid_fixtures_have_no_blocking_diagnostics(self, fixture: str, capsys) -> None:
+        rc = tool.main(["check", str(FIXTURES / "valid" / fixture)])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["diagnostic_envelope"] == "v1"
+        assert payload["diagnostic_engine"] == "1.0"
+        assert payload["software"] == "gaussian"
+        blocking = [d for d in payload["diagnostics"] if d.get("blocking")]
+        assert blocking == [], f"unexpected blocking: {blocking}"
+
+    def test_invalid_missing_charge_mult_has_blocking_error(self, capsys) -> None:
+        rc = tool.main(["check", str(FIXTURES / "invalid" / "missing_charge_mult.gjf")])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["diagnostic_envelope"] == "v1"
+        assert payload["ok"] is False
+        blocking = [d for d in payload["diagnostics"] if d.get("blocking")]
+        assert len(blocking) >= 1
+        assert any(d.get("severity") == "error" for d in blocking)
+
+    def test_invalid_unknown_route_has_warning(self, capsys) -> None:
+        rc = tool.main(["check", str(FIXTURES / "invalid" / "unknown_route_keyword.gjf")])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        warnings = [d for d in payload["diagnostics"] if d.get("severity") in {"warning", "hint"}]
+        assert warnings, "expected at least one advisory diagnostic"
+
+    def test_diagnostics_carry_envelope_fields(self, capsys) -> None:
+        rc = tool.main(["check", str(FIXTURES / "invalid" / "low_memory_nproc.gjf")])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        for diag in payload["diagnostics"]:
+            assert "code" in diag
+            assert "severity" in diag
+            assert "blocking" in diag
+            assert "range" in diag
+            assert diag.get("diagnostic_envelope") == "v1"
+
+
+class TestFixOperation:
+    def test_fix_returns_preview_actions(self, capsys) -> None:
+        rc = tool.main(["fix", str(FIXTURES / "invalid" / "missing_charge_mult.gjf")])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["capabilities"]["operation"] == "fix"
+        assert "actions" in payload
+        assert isinstance(payload["actions"], list)
+
+    def test_fix_on_valid_fixture_is_empty(self, capsys) -> None:
+        rc = tool.main(["fix", str(FIXTURES / "valid" / "water_sp.gjf")])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["actions"] == []
+
+
+class TestRuleFixtureCatalog:
+    @pytest.mark.parametrize("rule_file", sorted(RULES.glob("*.json")))
+    def test_rule_fixture_documents_expected_codes(self, rule_file: Path) -> None:
+        spec = json.loads(rule_file.read_text(encoding="utf-8"))
+        assert "rule" in spec
+        assert "code" in spec
+        assert "expected" in spec
+        assert spec["expected"]["code"] == spec["code"]
+
+
+class TestOpenQCSmokeEvidence:
+    def test_lsp_capabilities_has_provenance_and_openqc(self) -> None:
+        caps_path = Path(__file__).parent.parent / "lsp-capabilities.json"
+        payload = json.loads(caps_path.read_text(encoding="utf-8"))
+        assert payload["openqc"]["lsp_check_family"] is True
+        assert len(payload.get("sourceProvenance", [])) >= 1
+
+    def test_raw_assets_manifest_exists(self) -> None:
+        manifest = Path(__file__).parent.parent / "raw/assets/manifest.json"
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        assert len(data.get("entries", [])) >= 1
+
+    def test_manifest_operation_emits_fleet_manifest(self, capsys) -> None:
+        rc = tool.main(["manifest"])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert "capabilities" in payload
+        assert "codes" in payload
+
+    def test_fail_on_blocking_exits_nonzero_for_invalid_fixture(self, capsys) -> None:
+        rc = tool.main(
+            ["check", str(FIXTURES / "invalid" / "missing_charge_mult.gjf"), "--fail-on-blocking"]
+        )
+        assert rc == 1
+
+    def test_log_fixtures_exist_for_runtime_diagnostics(self) -> None:
+        """Log parsing is implemented in TypeScript; Python marks fixtures for CI."""
+        assert (LOG_FIXTURES / "scf_not_converged.out").exists()
+        assert (LOG_FIXTURES / "scf_converged.out").exists()
