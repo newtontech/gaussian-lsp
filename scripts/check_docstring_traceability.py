@@ -480,9 +480,9 @@ def assign_trace_ids(catalog: Tuple[RuleSpec, ...]) -> Dict[str, str]:
         specs = sorted(grouped[role_cat], key=lambda s: s.rule_code)
         role, cat_short = role_cat
         for ordinal, spec in enumerate(specs, start=1):
-            mapping[spec.rule_code + "@" + spec.file_role] = (
-                f"GAUSSIAN-{role}-{cat_short}-{ordinal:03d}"
-            )
+            mapping[
+                spec.rule_code + "@" + spec.file_role
+            ] = f"GAUSSIAN-{role}-{cat_short}-{ordinal:03d}"
     return mapping
 
 
@@ -616,13 +616,13 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
 
     # Detect broken wiki_links in the manifest (every link must resolve).
     broken_wiki_links: List[dict] = []
-    for entry in manifest.get("entries", []):
-        for link in entry.get("wiki_links", []):
+    for manifest_entry in manifest.get("entries", []):
+        for link in manifest_entry.get("wiki_links", []):
             link_abs = REPO_ROOT / link
             if not link_abs.is_file():
                 broken_wiki_links.append(
                     {
-                        "stableId": entry.get("stable_id"),
+                        "stableId": manifest_entry.get("stable_id"),
                         "wikiLink": link,
                     }
                 )
@@ -648,15 +648,17 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
     # anchors, and any ``https://`` URL discovered inside the raw asset
     # markdown files (so third-party references like cclib's parser are kept).
     url_set = {
-        entry["source_url"] for entry in manifest.get("entries", []) if entry.get("source_url")
+        manifest_entry["source_url"]
+        for manifest_entry in manifest.get("entries", [])
+        if manifest_entry.get("source_url")
     } | {
         anchor.get("url")
         for anchor in manifest.get("official_source_anchors", [])
         if anchor.get("url")
     }
     url_pattern = re.compile(r"https?://[^\s)>]+")
-    for entry in manifest.get("entries", []):
-        asset_path = REPO_ROOT / "raw" / "assets" / entry["path"]
+    for manifest_entry in manifest.get("entries", []):
+        asset_path = REPO_ROOT / "raw" / "assets" / manifest_entry["path"]
         if asset_path.is_file():
             for match in url_pattern.findall(asset_path.read_text(encoding="utf-8")):
                 url_set.add(match.rstrip(".,;"))
@@ -673,13 +675,13 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
 
     # Raw manifest summary -- detect entries whose asset file is missing.
     raw_failures: List[dict] = []
-    for entry in manifest.get("entries", []):
-        asset_path = REPO_ROOT / "raw" / "assets" / entry["path"]
+    for manifest_entry in manifest.get("entries", []):
+        asset_path = REPO_ROOT / "raw" / "assets" / manifest_entry["path"]
         if not asset_path.is_file():
             raw_failures.append(
                 {
-                    "stableId": entry.get("stable_id"),
-                    "path": f"raw/assets/{entry['path']}",
+                    "stableId": manifest_entry.get("stable_id"),
+                    "path": f"raw/assets/{manifest_entry['path']}",
                     "reason": "asset file missing",
                 }
             )
