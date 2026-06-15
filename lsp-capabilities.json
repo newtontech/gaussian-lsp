@@ -8,7 +8,7 @@
     "tag_policy": "Git tags SHOULD match the VERSION file at release time (semver).",
     "supported_gaussian_versions": ["Gaussian 16"],
     "capture_date": "2026-06-15",
-    "extraction_commit": "b80845358ad11f01bb0713d0fca2ac4f4067e581",
+    "extraction_commit": "b179f04c529b20025d9f767ed8dea5c766deed3a",
     "closed_loop_support": {
       "status": "preview",
       "log_diagnostics": true,
