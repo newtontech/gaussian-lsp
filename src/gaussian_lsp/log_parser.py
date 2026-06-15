@@ -64,6 +64,8 @@ CODE_OPT_NOT_CONVERGED = "GAUSS-E038"
 CODE_MEMORY_EXHAUSTED = "GAUSS-E039"
 #: ``Item ... NO`` optimisation convergence line -- warning, not fatal.
 CODE_OPT_STEP_UNCONVERGED = "GAUSS-W034"
+#: No ``Normal termination`` nor ``Error termination`` marker -- log truncated.
+CODE_INCOMPLETE_LOG = "GAUSS-I031"
 
 #: All public log parser codes, ordered by severity then rule id.
 ALL_LOG_CODES: tuple[str, ...] = (
@@ -74,6 +76,7 @@ ALL_LOG_CODES: tuple[str, ...] = (
     CODE_OPT_NOT_CONVERGED,
     CODE_MEMORY_EXHAUSTED,
     CODE_OPT_STEP_UNCONVERGED,
+    CODE_INCOMPLETE_LOG,
 )
 
 # ---------------------------------------------------------------------------
@@ -500,7 +503,7 @@ def parse_log(text: str, *, path: str = "") -> list[dict[str, Any]]:
         # parent probe has at least one finding to gate on.
         findings.append(
             LogFinding(
-                code="GAUSS-I031",
+                code=CODE_INCOMPLETE_LOG,
                 severity="information",
                 message=(
                     "No 'Normal termination' or 'Error termination' marker "
@@ -516,7 +519,7 @@ def parse_log(text: str, *, path: str = "") -> list[dict[str, Any]]:
                 ],
                 source_provenance=_log_provenance(
                     raw_line="",
-                    rule="GAUSS-I031",
+                    rule=CODE_INCOMPLETE_LOG,
                     source="raw/assets/gaussian-output-format.md",
                     note=(
                         "Gaussian always emits a final termination marker; "
@@ -597,6 +600,16 @@ def log_manifest() -> dict[str, Any]:
             "blocking": False,
             "capability": "runtime-log",
             "summary": "'Item ... NO' optimisation convergence line",
+        },
+        CODE_INCOMPLETE_LOG: {
+            "severity": "information",
+            "category": "preflight/runtime-risk",
+            "blocking": False,
+            "capability": "runtime-log",
+            "summary": (
+                "No 'Normal termination' nor 'Error termination' marker -- "
+                "log may be truncated or incomplete"
+            ),
         },
     }
     return {
