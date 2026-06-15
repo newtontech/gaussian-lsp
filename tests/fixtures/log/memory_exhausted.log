@@ -1,0 +1,29 @@
+ Entering Gaussian System, Link 0=/scr1/g16/g16
+ ******************************************
+ Gaussian 16: ES64L-G16RevC.01 25-Dec-2020
+                10-Mar-2024
+ ******************************************
+ %chk=large_ccsd.chk
+ %mem=512MB
+ %nproc=4
+ ----------------------------------------------------------------------
+ #p CCSD(T)/cc-pVTZ
+ ------------------------------------------------------------------
+ large CCSD(T) run with too little memory
+
+ Charge =  0 Multiplicity = 1
+ C                  0.00000000    0.00000000    0.00000000
+ H                  0.00000000    0.00000000    1.08900000
+ H                  0.00000000    1.02700000   -0.36300000
+ H                  0.88900000   -0.51400000   -0.36300000
+ H                 -0.88900000   -0.51400000   -0.36300000
+
+ NAtoms=    5 NQM=       5 NMM=     0 NMul=   1.
+ Standard basis: cc-pVTZ (5D, 7F)
+ 122 basis functions, 264 primitive gaussians
+
+ CCSD(T) requires substantial memory for this basis set size.
+ Allocating large workspace...
+ Not enough memory to allocate work array 1 of length 12345678.
+ Wanted    4096000000 bytes of mem, got   536870912 bytes.
+ Error termination via Lnk1e in /scr1/g16/l502.exe at Tue Mar 10 15:14:21 2020.

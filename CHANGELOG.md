@@ -1,8 +1,18 @@
 ## [Unreleased]
 
 ### Added
+- Python runtime log parser (`src/gaussian_lsp/log_parser.py`) closing the backend-only parity gap with the TypeScript `parseLog` surface (#87). Implements GAUSS-E034 (SCF convergence failure), GAUSS-E035 (geometry/Z-matrix parse failure), GAUSS-E036 (catch-all `Error termination via Lnk1e`), GAUSS-E037 (structured per-Link fault with role/cause/hint from the LINK_KNOWLEDGE table), GAUSS-E038 (optimization step budget exhausted), GAUSS-E039 (memory/disk exhaustion), GAUSS-W034 (per-iteration optimization convergence warning), and GAUSS-I031 (truncated/incomplete log marker). Every blocking finding carries an explicit `refusal_reason` explaining why the fix is unsafe to auto-apply.
+- New `gaussian-lsp-tool parse-log` subcommand plus auto-detection in `gaussian-lsp-tool check`/`fix` for `.log`/`.out` files. `check` and `fix` route through the log parser when the file looks like a Gaussian runtime output.
+- Realistic runtime log fixtures for SCF L502 failure (`error_termination_l502.log`), basis-set L301 failure (`error_termination_l301.log`), optimization exhaustion (`optimization_not_converged.log`), memory exhaustion (`memory_exhausted.log`), geometry/Z-matrix failure (`geometry_parse_failure.log`), clean run (`normal_termination.out`), and truncated log (`empty_truncated.log`) under `tests/fixtures/log/`.
+- Rule-catalog fixtures for `GAUSS-E036`/`E037`/`E038`/`E039` under `tests/fixtures/rules/`.
+- Wiki concept document `wiki/concepts/gaussian-log-runtime-errors.md` documenting the runtime-log capability, rule code mapping, and the Link knowledge table.
 - Closed-loop fixture tests (`tests/test_closed_loop_fixtures.py`) for DiagnosticEnvelope/v1, fix previews, and OpenQC smoke evidence (#80).
 - Lint cleanup in `tests/test_lsp_readiness.py` so `make check` passes on the maturity branch.
+
+### Changed
+- `gaussian-lsp-tool fix` now preserves first-party actions from diagnostics (log parser and preflight) and surfaces `refusal_reason` for every unsafe quickfix (#87).
+- `lsp-capabilities.json` adds `runtime-log` capability, `parse-log` operation, log-parser source provenance, and the runtime-log codes in the diagnostic categories (#87).
+- `wiki/synthesis/diagnostics-rule-catalog.md` documents the runtime-log capability with rule codes, Link knowledge table, and CLI examples.
 
 ### Fixed
 - `scripts/openqc_smoke.sh` now checks real runtime modules instead of the removed `analyzer.py` stub.

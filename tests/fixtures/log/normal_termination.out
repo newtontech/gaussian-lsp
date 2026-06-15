@@ -1,0 +1,44 @@
+ Entering Gaussian System, Link 0=/scr1/g16/g16
+ ******************************************
+ Gaussian 16: ES64L-G16RevC.01 25-Dec-2020
+                10-Mar-2024
+ ******************************************
+ %chk=water_opt.chk
+ %mem=8GB
+ %nproc=4
+ ----------------------------------------------------------------------
+ #p B3LYP/6-31G(d) opt freq
+ ------------------------------------------------------------------
+ water optimization - converged
+
+ Charge =  0 Multiplicity = 1
+ O                  0.00000000    0.00000000    0.11737800
+ H                  0.00000000    0.75695000   -0.46948000
+ H                  0.00000000   -0.75695000   -0.46948000
+
+ NAtoms=    3 NQM=       3 NMM=     0 NMul=   1.
+ Standard basis: 6-31G(d) (6D, 7F)
+ 28 basis functions, 44 primitive gaussians
+
+ SCF Done:  E(RB3LYP) =  -76.41867301     A.U. after    8 cycles
+            NFock=  8  Conv=0.34D-08    -V/T= 2.0044
+
+ Item               Value     Threshold  Converged?
+ Maximum Force            0.000012     0.000450   YES
+ RMS     Force            0.000006     0.000300   YES
+ Maximum Displacement     0.000043     0.001800   YES
+ RMS     Displacement     0.000021     0.001200   YES
+ Predicted change in Energy=-1.728211D-11
+
+ Optimization completed.
+    -- Stationary point found.
+ ----------------------------
+ !   Optimized Parameters   !
+ ! (Angstroms and Degrees)  !
+ ----------------------------
+ !  Name  Definition    Value          Derivative Info.          !
+ !  R1    R(2,1)        0.9617         -DE/DX =  0.0            !
+ ----------------------------
+
+ Frequencies --   1612.7665   3802.7965   3916.2449
+ Normal termination of Gaussian 16 at Tue Mar 10 15:25:09 2020.

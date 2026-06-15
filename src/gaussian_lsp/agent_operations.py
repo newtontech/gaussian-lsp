@@ -16,7 +16,15 @@ from typing import Any, Callable
 
 from .rich_diagnostics import agent_check_payload
 
-OPERATIONS = ("check", "context", "complete", "hover", "symbols", "fix")
+OPERATIONS = (
+    "check",
+    "parse-log",
+    "context",
+    "complete",
+    "hover",
+    "symbols",
+    "fix",
+)
 _WORD_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_.$%+-]*")
 _SECTION_RE = re.compile(r"^\s*(?:&(?P<section>[A-Za-z][A-Za-z0-9_.$-]*)|\[(?P<bracket>[^\]]+)\])")
 _ASSIGNMENT_RE = re.compile(r"^\s*(?P<key>[A-Za-z_][A-Za-z0-9_.$%-]*)\s*(?:=|:|\s+)")
@@ -374,20 +382,58 @@ def _fix_actions(
         hints = diagnostic.get("fix_hints") or []
         if not hints:
             hints = ["Review this diagnostic before running the calculation."]
-        for index, hint in enumerate(hints[:5]):
-            actions.append(
-                {
-                    "title": str(hint),
-                    "kind": "quickfix",
-                    "diagnostic_code": diagnostic.get("code"),
-                    "diagnostic_range": diagnostic.get("range"),
-                    "confidence": diagnostic.get("confidence", 1.0),
-                    "blocking": bool(diagnostic.get("blocking", False)),
-                    "safe_to_auto_apply": False,
-                    "edit": None,
-                    "data": {"hint_index": index, "source": diagnostic.get("source")},
-                }
-            )
+        # The diagnostic may already carry first-party actions (the log
+        # parser and preflight do). Preserve them verbatim so callers that
+        # branch on ``safe_to_auto_apply``/``refusal_reason`` see the same
+        # provenance-rich payload as ``check`` consumers.
+        first_party = diagnostic.get("actions") or []
+        for action in first_party[:5]:
+            entry = {
+                "title": str(action.get("kind") or "manual_review"),
+                "kind": "quickfix",
+                "diagnostic_code": diagnostic.get("code"),
+                "diagnostic_range": diagnostic.get("range"),
+                "confidence": diagnostic.get("confidence", 1.0),
+                "blocking": bool(diagnostic.get("blocking", False)),
+                "safe_to_auto_apply": bool(action.get("safe_to_auto_apply", False)),
+                "edit": action.get("edit"),
+                "data": {
+                    "source": diagnostic.get("source"),
+                    "action_kind": action.get("kind"),
+                },
+            }
+            # An explicit refusal reason is the contract for unsafe cases:
+            # the parent fleet router surfaces it to the human reviewer
+            # instead of silently dropping the action.
+            if "refusal_reason" in action:
+                entry["refusal_reason"] = action["refusal_reason"]
+            if "value" in action:
+                entry["data"]["value"] = action["value"]
+            if "target" in action:
+                entry["data"]["target"] = action["target"]
+            actions.append(entry)
+        # Fall back to hint-text quickfixes when there are no first-party
+        # actions; this preserves the legacy behavior for input-side lint
+        # diagnostics that have not been upgraded to rich actions yet.
+        if not first_party:
+            for index, hint in enumerate(hints[:5]):
+                actions.append(
+                    {
+                        "title": str(hint),
+                        "kind": "quickfix",
+                        "diagnostic_code": diagnostic.get("code"),
+                        "diagnostic_range": diagnostic.get("range"),
+                        "confidence": diagnostic.get("confidence", 1.0),
+                        "blocking": bool(diagnostic.get("blocking", False)),
+                        "safe_to_auto_apply": False,
+                        "edit": None,
+                        "data": {"hint_index": index, "source": diagnostic.get("source")},
+                        "refusal_reason": (
+                            "No provenance-backed auto-fix for this diagnostic; "
+                            "review the hint and apply manually."
+                        ),
+                    }
+                )
     return actions
 
 

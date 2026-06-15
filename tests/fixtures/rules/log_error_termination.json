@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.log.error_termination",
+  "code": "GAUSS-E036",
+  "severity": "error",
+  "description": "Gaussian supervisor reported fatal 'Error termination via Lnk1e' -- the job did not complete.",
+  "input": " Error termination via Lnk1e in /scr1/g16/l502.exe at Tue Mar 10 15:05:09 2020.\n",
+  "expected": {
+    "code": "GAUSS-E036",
+    "rule": "gaussian.log.error_termination",
+    "severity": "error"
+  }
+}

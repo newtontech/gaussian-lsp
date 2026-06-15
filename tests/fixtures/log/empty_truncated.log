@@ -1,0 +1,12 @@
+ Entering Gaussian System, Link 0=/scr1/g16/g16
+ ******************************************
+ Gaussian 16: ES64L-G16RevC.01 25-Dec-2020
+                10-Mar-2024
+ ******************************************
+ %chk=partial.chk
+ %mem=2GB
+ %nproc=4
+ ----------------------------------------------------------------------
+ #p B3LYP/6-31G(d) opt
+ ------------------------------------------------------------------
+ partial / truncated log - no termination marker present

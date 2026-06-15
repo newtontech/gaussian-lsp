@@ -1,0 +1,26 @@
+ Entering Gaussian System, Link 0=/scr1/g16/g16
+ ******************************************
+ Gaussian 16: ES64L-G16RevC.01 25-Dec-2020
+                10-Mar-2024
+ ******************************************
+ %chk=zmatrix_bad.chk
+ %mem=1GB
+ %nproc=2
+ ----------------------------------------------------------------------
+ #p HF/6-31G(d)
+ ------------------------------------------------------------------
+ bad Z-matrix input
+
+ Charge =  0 Multiplicity = 1
+ Symbolic Z-matrix:
+ O
+ H 1 r2
+ H 1 r3 2 a3
+
+ Variables:
+ r2 0.96
+ r3 0.96
+
+ Error in geometry specification.
+ Stop in parsing Z-matrix.
+ Error termination via Lnk1e in /scr1/g16/l402.exe at Tue Mar 10 15:18:02 2020.

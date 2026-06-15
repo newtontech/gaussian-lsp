@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.log.opt_not_converged",
+  "code": "GAUSS-E038",
+  "severity": "error",
+  "description": "Geometry optimization exhausted its step budget (NStep) without converging.",
+  "input": " Optimization stopped.\n  -- Number of steps exceeded, NStep=  50.\n",
+  "expected": {
+    "code": "GAUSS-E038",
+    "rule": "gaussian.log.opt_not_converged",
+    "severity": "error"
+  }
+}
