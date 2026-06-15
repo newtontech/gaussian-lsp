@@ -17,9 +17,7 @@ from gaussian_lsp.features.code_actions import CodeActionProvider
 from gaussian_lsp.features.definition import DefinitionProvider
 from gaussian_lsp.features.references import ReferencesProvider
 from gaussian_lsp.features.rename import RenameProvider, get_rename_provider
-from gaussian_lsp.parser.gjf_parser import (
-    GJFParser,
-)
+from gaussian_lsp.parser.gjf_parser import GJFParser
 
 # ---------------------------------------------------------------------------
 # Paths
