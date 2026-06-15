@@ -1,0 +1,11 @@
+%mem=64MB
+%nproc=1
+
+#p HF/STO-3G sp
+
+Test with low memory and unusual nproc
+
+0 1
+O  0.000000  0.000000  0.000000
+H  0.000000  0.756950 -0.469480
+H  0.000000 -0.756950 -0.469480

@@ -1,0 +1,10 @@
+%mem=256MB
+%nproc=4
+
+#p HF/STO-3G sp
+
+Missing charge/multiplicity - should trigger error
+
+O  0.000000  0.000000  0.000000
+H  0.000000  0.756950 -0.469480
+H  0.000000 -0.756950 -0.469480

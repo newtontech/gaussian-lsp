@@ -1,0 +1,13 @@
+%mem=256MB
+%nproc=4
+%chk=test.chk
+
+#p B3LYP/6-31G(d) opt freq
+
+Test molecule - formaldehyde geometry optimization + frequency
+
+0 1
+C   0.000000   0.000000   0.000000
+O   0.000000   0.000000   1.203000
+H   0.000000   0.934200  -0.587100
+H   0.000000  -0.934200  -0.587100
