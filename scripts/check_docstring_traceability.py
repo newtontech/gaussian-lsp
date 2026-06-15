@@ -480,9 +480,9 @@ def assign_trace_ids(catalog: Tuple[RuleSpec, ...]) -> Dict[str, str]:
         specs = sorted(grouped[role_cat], key=lambda s: s.rule_code)
         role, cat_short = role_cat
         for ordinal, spec in enumerate(specs, start=1):
-            mapping[
-                spec.rule_code + "@" + spec.file_role
-            ] = f"GAUSSIAN-{role}-{cat_short}-{ordinal:03d}"
+            mapping[spec.rule_code + "@" + spec.file_role] = (
+                f"GAUSSIAN-{role}-{cat_short}-{ordinal:03d}"
+            )
     return mapping
 
 
@@ -508,6 +508,14 @@ def manifest_entry_by_raw_path(manifest: dict) -> Dict[str, dict]:
         raw_path = f"raw/assets/{entry['path']}"
         by_path[raw_path] = entry
     return by_path
+
+
+def source_url_for_raw_path(raw_path: str, by_raw: Dict[str, dict]) -> str:
+    entry = by_raw.get(raw_path, {})
+    source_url = entry.get("source_url")
+    if isinstance(source_url, str) and source_url:
+        return source_url
+    return f"repo:{raw_path}"
 
 
 # ---------------------------------------------------------------------------
@@ -589,6 +597,7 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
                 "ordinal": int(trace_id.rsplit("-", 1)[1]),
                 "severity": spec.severity,
                 "symbol": spec.symbol,
+                "sourcePath": spec.doc_path,
                 "docstringPath": spec.doc_path,
                 "wikiPath": spec.wiki_path,
                 "rawPath": spec.raw_path,
@@ -608,6 +617,7 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
             {
                 "wikiPath": wiki_path,
                 "rawPath": primary_raw,
+                "sourceUrl": source_url_for_raw_path(primary_raw, by_raw),
                 "rawStableId": entry.get("stable_id"),
                 "ruleCodes": sorted(set(wiki_rule_codes[wiki_path])),
                 "status": "linked",
@@ -671,7 +681,15 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
         and not u.endswith("newtontech/gaussian-lsp.git")
         and "newtontech.local" not in u
     }
-    source_urls: List[str] = sorted(url_set)
+    url_to_raw: Dict[str, str] = {}
+    for raw_path, entry in by_raw.items():
+        source_url = entry.get("source_url")
+        if isinstance(source_url, str) and source_url and source_url in url_set:
+            url_to_raw.setdefault(source_url, raw_path)
+    source_urls: List[dict] = [
+        {"rawPath": url_to_raw.get(url, "raw/assets/manifest.json"), "url": url}
+        for url in sorted(url_set)
+    ]
 
     # Raw manifest summary -- detect entries whose asset file is missing.
     raw_failures: List[dict] = []
@@ -711,6 +729,7 @@ def build_report(generated_at: str) -> Tuple[dict, List[str]]:
         "sourceUrls": source_urls,
         "rawManifest": {
             "path": "raw/assets/manifest.json",
+            "ok": not raw_failures and not broken_wiki_links,
             "schemaVersion": manifest.get("schema_version"),
             "entryCount": len(manifest.get("entries", [])),
             "allEntriesReferenced": all_entries_referenced,

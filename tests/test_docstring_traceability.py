@@ -209,6 +209,7 @@ def test_rule_id_paths_are_repo_relative(report: dict) -> None:
 def test_raw_manifest_path_is_repo_relative(report: dict) -> None:
     raw_manifest = report["rawManifest"]
     assert raw_manifest["path"] == "raw/assets/manifest.json"
+    assert raw_manifest["ok"] is True
     for failure in raw_manifest.get("failures", []):
         assert not ABSOLUTE_PATH_PATTERN.match(failure["path"]), failure
 
@@ -251,7 +252,9 @@ def test_wiki_sources_reference_real_files(report: dict) -> None:
 
 def test_source_urls_are_https(report: dict) -> None:
     assert report["sourceUrls"], "sourceUrls is empty"
-    for url in report["sourceUrls"]:
+    for source in report["sourceUrls"]:
+        assert source["rawPath"].startswith("raw/assets/"), source
+        url = source["url"]
         assert url.startswith("https://") or url.startswith("http://"), url
         assert "newtontech.local" not in url
         assert not url.endswith("gaussian-lsp.git"), url

@@ -345,6 +345,7 @@
     {
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md",
+      "sourceUrl": "https://gaussian.com/output/",
       "rawStableId": "gaussian-output-format-v1",
       "ruleCodes": [
         "GAUSS-E034",
@@ -361,6 +362,7 @@
     {
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md",
+      "sourceUrl": "repo:raw/assets/diagnostic-engine-v1.md",
       "rawStableId": "gaussian-diagnostic-engine-v1-doc",
       "ruleCodes": [
         "G001",
@@ -395,6 +397,7 @@
       "ordinal": 1,
       "severity": "warning",
       "symbol": "RULE_UNKNOWN_ROUTE_KEYWORD",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -407,6 +410,7 @@
       "ordinal": 2,
       "severity": "warning",
       "symbol": "RULE_ROUTE_TYPO",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -419,6 +423,7 @@
       "ordinal": 3,
       "severity": "warning",
       "symbol": "RULE_UNKNOWN_LINK0",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -431,6 +436,7 @@
       "ordinal": 4,
       "severity": "warning",
       "symbol": "RULE_NO_JOB_TYPE",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -443,6 +449,7 @@
       "ordinal": 1,
       "severity": "warning",
       "symbol": "RULE_FREQ_WITHOUT_OPT",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -455,6 +462,7 @@
       "ordinal": 2,
       "severity": "warning",
       "symbol": "RULE_OPT_LOOSE_CONVERGENCE",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -467,6 +475,7 @@
       "ordinal": 3,
       "severity": "warning",
       "symbol": "RULE_OPEN_SHELL_WITHOUT_UNRESTRICTED",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -479,6 +488,7 @@
       "ordinal": 4,
       "severity": "warning",
       "symbol": "RULE_SCF_CONVERGENCE_POSTHF",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -491,6 +501,7 @@
       "ordinal": 1,
       "severity": "hint",
       "symbol": "RULE_VERBOSITY_HINT",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -503,6 +514,7 @@
       "ordinal": 1,
       "severity": "warning",
       "symbol": "RULE_NPROC_UNUSUAL",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -515,6 +527,7 @@
       "ordinal": 2,
       "severity": "warning",
       "symbol": "RULE_MEM_LOW",
+      "sourcePath": "src/gaussian_lsp/features/lint.py",
       "docstringPath": "src/gaussian_lsp/features/lint.py",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/diagnostic-engine-v1.md"
@@ -527,6 +540,7 @@
       "ordinal": 1,
       "severity": "error",
       "symbol": "CODE_SCF_NOT_CONVERGED",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -539,6 +553,7 @@
       "ordinal": 2,
       "severity": "error",
       "symbol": "CODE_ERROR_TERMINATION",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -551,6 +566,7 @@
       "ordinal": 3,
       "severity": "error",
       "symbol": "CODE_LINK_FAULT",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -563,6 +579,7 @@
       "ordinal": 4,
       "severity": "error",
       "symbol": "CODE_OPT_NOT_CONVERGED",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -575,6 +592,7 @@
       "ordinal": 5,
       "severity": "error",
       "symbol": "CODE_MEMORY_EXHAUSTED",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -587,6 +605,7 @@
       "ordinal": 6,
       "severity": "information",
       "symbol": "CODE_INCOMPLETE_LOG",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -599,6 +618,7 @@
       "ordinal": 1,
       "severity": "warning",
       "symbol": "CODE_OPT_STEP_UNCONVERGED",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -611,6 +631,7 @@
       "ordinal": 1,
       "severity": "error",
       "symbol": "CODE_GEOMETRY_PARSE_FAILURE",
+      "sourcePath": "src/gaussian_lsp/log_parser.py",
       "docstringPath": "src/gaussian_lsp/log_parser.py",
       "wikiPath": "wiki/concepts/gaussian-log-runtime-errors.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -623,6 +644,7 @@
       "ordinal": 1,
       "severity": "error",
       "symbol": "parseLog:scf_not_converged",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -635,6 +657,7 @@
       "ordinal": 1,
       "severity": "error",
       "symbol": "checkMissingRoute",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-input-format.md"
@@ -647,6 +670,7 @@
       "ordinal": 2,
       "severity": "error",
       "symbol": "checkChargeMultiplicity",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-input-format.md"
@@ -659,6 +683,7 @@
       "ordinal": 3,
       "severity": "warning",
       "symbol": "checkUnknownKeyword",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-input-format.md"
@@ -671,6 +696,7 @@
       "ordinal": 4,
       "severity": "warning",
       "symbol": "checkMethodBasisIncompatibility",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-input-format.md"
@@ -683,6 +709,7 @@
       "ordinal": 1,
       "severity": "error",
       "symbol": "parseLog:geometry_parse_failure",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-output-format.md"
@@ -695,6 +722,7 @@
       "ordinal": 1,
       "severity": "error",
       "symbol": "checkInvalidMemory",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-input-format.md"
@@ -707,38 +735,109 @@
       "ordinal": 2,
       "severity": "error",
       "symbol": "checkInvalidNproc",
+      "sourcePath": "src/parsers/diagnostics.ts",
       "docstringPath": "src/parsers/diagnostics.ts",
       "wikiPath": "wiki/synthesis/diagnostics-rule-catalog.md",
       "rawPath": "raw/assets/gaussian-input-format.md"
     }
   ],
   "sourceUrls": [
-    "http://kisthelp.univ-reims.fr/userDocumentation/gaussian.html",
-    "https://emleddin.github.io/comp-chem-website/Otherguide-gaussian-input.html",
-    "https://gaussian.com/basissets/",
-    "https://gaussian.com/capabilities/",
-    "https://gaussian.com/examples/",
-    "https://gaussian.com/input/",
-    "https://gaussian.com/input/route.htm",
-    "https://gaussian.com/keywords/",
-    "https://gaussian.com/link0/",
-    "https://gaussian.com/opt/",
-    "https://gaussian.com/output/",
-    "https://gaussian.com/route/",
-    "https://gaussian.com/scf/",
-    "https://github.com/OpenChemistry/openbabel",
-    "https://github.com/Sungil-Hong/gaussianutility",
-    "https://github.com/cclib/cclib",
-    "https://github.com/cclib/cclib/blob/master/cclib/parser/gaussianparser.py",
-    "https://github.com/chunxiangzheng/gaussian_log_file_converter",
-    "https://github.com/sinagilassi/GaussParse",
-    "https://github.com/team-mayes/gaussian_wrangler",
-    "https://wild.life.nctu.edu.tw/~jsyu/compchem/g09/g09ur/k_dft.htm",
-    "https://zipse.cup.uni-muenchen.de/teaching/computational-chemistry-2/",
-    "https://zipse.cup.uni-muenchen.de/teaching/computational-chemistry-2/topics/a-typical-gaussian-output-file/"
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "http://kisthelp.univ-reims.fr/userDocumentation/gaussian.html"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://emleddin.github.io/comp-chem-website/Otherguide-gaussian-input.html"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://gaussian.com/basissets/"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://gaussian.com/capabilities/"
+    },
+    {
+      "rawPath": "raw/assets/gaussian-examples.md",
+      "url": "https://gaussian.com/examples/"
+    },
+    {
+      "rawPath": "raw/assets/gaussian-input-format.md",
+      "url": "https://gaussian.com/input/"
+    },
+    {
+      "rawPath": "raw/assets/gaussian-route-syntax.md",
+      "url": "https://gaussian.com/input/route.htm"
+    },
+    {
+      "rawPath": "raw/assets/gaussian-keywords-reference.md",
+      "url": "https://gaussian.com/keywords/"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://gaussian.com/link0/"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://gaussian.com/opt/"
+    },
+    {
+      "rawPath": "raw/assets/gaussian-output-format.md",
+      "url": "https://gaussian.com/output/"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://gaussian.com/route/"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://gaussian.com/scf/"
+    },
+    {
+      "rawPath": "raw/assets/gaussian-github-parsers.md",
+      "url": "https://github.com/OpenChemistry/openbabel"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://github.com/Sungil-Hong/gaussianutility"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://github.com/cclib/cclib"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://github.com/cclib/cclib/blob/master/cclib/parser/gaussianparser.py"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://github.com/chunxiangzheng/gaussian_log_file_converter"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://github.com/sinagilassi/GaussParse"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://github.com/team-mayes/gaussian_wrangler"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://wild.life.nctu.edu.tw/~jsyu/compchem/g09/g09ur/k_dft.htm"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://zipse.cup.uni-muenchen.de/teaching/computational-chemistry-2/"
+    },
+    {
+      "rawPath": "raw/assets/manifest.json",
+      "url": "https://zipse.cup.uni-muenchen.de/teaching/computational-chemistry-2/topics/a-typical-gaussian-output-file/"
+    }
   ],
   "rawManifest": {
     "path": "raw/assets/manifest.json",
+    "ok": true,
     "schemaVersion": "provenance-manifest-v1",
     "entryCount": 13,
     "allEntriesReferenced": true,
