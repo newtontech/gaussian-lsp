@@ -1,0 +1,176 @@
+{
+  "manifest_version": "1.0.0",
+  "schema_version": "provenance-manifest-v1",
+  "created_at": "2026-06-15T00:00:00Z",
+  "repository": "newtontech/gaussian-lsp",
+  "pipeline": "official-docs -> raw/assets -> wiki/entities+concepts+synthesis -> versioned schema/rules -> provenance -> fixtures/eval -> LSP runtime/OpenQC integration",
+  "official_source_anchors": [
+    {
+      "name": "Gaussian Input Overview",
+      "type": "official_docs",
+      "url": "https://gaussian.com/input/",
+      "retrieval_date": "2026-06-10",
+      "software_version": "Gaussian 16",
+      "license": "proprietary",
+      "notes": "Official Gaussian input documentation"
+    }
+  ],
+  "entries": [
+    {
+      "path": "gaussian-input-format.md",
+      "source_type": "official_docs",
+      "source_url": "https://gaussian.com/input/",
+      "retrieval_date": "2026-06-10",
+      "software_version": "Gaussian 16",
+      "license": "proprietary",
+      "checksum_sha256": "1b061374485fb1c39f3b89db9f46c537bac7eafe9c912dee5517b4b9f58cc4ef",
+      "stable_id": "gaussian-input-format-v1",
+      "role": "file_format_spec",
+      "wiki_links": ["wiki/entities/ABACUS_INPUT.md"]
+    },
+    {
+      "path": "gaussian-route-syntax.md",
+      "source_type": "official_docs",
+      "source_url": "https://gaussian.com/input/route.htm",
+      "retrieval_date": "2026-06-10",
+      "software_version": "Gaussian 16",
+      "license": "proprietary",
+      "checksum_sha256": "2fc73ff6b84e5f04ba36e5e9df875995140af1e2e815d4c4ab8a60d98cac13b0",
+      "stable_id": "gaussian-route-syntax-v1",
+      "role": "keyword_reference",
+      "wiki_links": ["wiki/entities/KeywordSchema.md"]
+    },
+    {
+      "path": "gaussian-keywords-reference.md",
+      "source_type": "official_docs",
+      "source_url": "https://gaussian.com/keywords/",
+      "retrieval_date": "2026-06-10",
+      "software_version": "Gaussian 16",
+      "license": "proprietary",
+      "checksum_sha256": "a42e850d552b6b466896fae3a5cc6fad737a609da245c130cce74a0f3d517c7a",
+      "stable_id": "gaussian-keywords-reference-v1",
+      "role": "keyword_reference",
+      "wiki_links": ["wiki/entities/KeywordSchema.md"]
+    },
+    {
+      "path": "gaussian-examples.md",
+      "source_type": "official_docs",
+      "source_url": "https://gaussian.com/examples/",
+      "retrieval_date": "2026-06-10",
+      "software_version": "Gaussian 16",
+      "license": "proprietary",
+      "checksum_sha256": "27d06f62e8b4513fe4121ddf0fed1cf9857cf2a4896e80598122c1c62bfbc3d8",
+      "stable_id": "gaussian-examples-v1",
+      "role": "examples",
+      "wiki_links": ["wiki/synthesis/Examples_and_Tutorials.md"]
+    },
+    {
+      "path": "gaussian-output-format.md",
+      "source_type": "official_docs",
+      "source_url": "https://gaussian.com/output/",
+      "retrieval_date": "2026-06-10",
+      "software_version": "Gaussian 16",
+      "license": "proprietary",
+      "checksum_sha256": "f47551994fcd35cf36afd75a82b853b2722f8209326329e596b3d210079c402b",
+      "stable_id": "gaussian-output-format-v1",
+      "role": "output_format_spec",
+      "wiki_links": []
+    },
+    {
+      "path": "gaussian-github-parsers.md",
+      "source_type": "third_party_docs",
+      "source_url": "https://github.com/OpenChemistry/openbabel",
+      "retrieval_date": "2026-06-10",
+      "software_version": "various",
+      "license": "GPL-2.0-or-later",
+      "checksum_sha256": "374ce554c0fb2a4163a68549e60721db643ee8cb3fd4e53adccadc84611492b2",
+      "stable_id": "gaussian-github-parsers-v1",
+      "role": "reference",
+      "wiki_links": []
+    },
+    {
+      "path": "diagnostic-engine-v1.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "92cbc81010ff68d207d1f155001a86cee27dd6e32601d9aaeb982af0234e937f",
+      "stable_id": "gaussian-diagnostic-engine-v1-doc",
+      "role": "architecture_doc",
+      "wiki_links": ["wiki/synthesis/Diagnostic_Codes.md"]
+    },
+    {
+      "path": "diagnostic-schema.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "9c2804ab701d0d51216b96a5ebfbadfb00b714c1b10dc275d8e152e96d67def8",
+      "stable_id": "gaussian-diagnostic-schema-doc",
+      "role": "schema_doc",
+      "wiki_links": ["wiki/entities/Diagnostic.md"]
+    },
+    {
+      "path": "parser-vocabulary.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "0c59a6877320f276693288ce7b55ce98daaeb453e4e8bf559a3e5c97f98bede3",
+      "stable_id": "parser-vocabulary-doc",
+      "role": "parser_doc",
+      "wiki_links": ["wiki/concepts/Parser.md"]
+    },
+    {
+      "path": "keyword-docs.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "ee3f8b131d0f368181936c55edc1dab452628d47e642003438fc6dba47d149f0",
+      "stable_id": "keyword-docs",
+      "role": "keyword_doc",
+      "wiki_links": ["wiki/entities/KeywordSchema.md"]
+    },
+    {
+      "path": "docs-overview.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "e983b1d9ddfd9e79a4874a2abd2ee38ea160eecf5bb1dcb3a9e36105298534b3",
+      "stable_id": "docs-overview",
+      "role": "overview",
+      "wiki_links": []
+    },
+    {
+      "path": "openqc-alignment.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "8745c1b8d4a08d123c9f7fd5a2e879826bd30e3b4f9522dd785313503bd51652",
+      "stable_id": "openqc-alignment-doc",
+      "role": "integration_contract",
+      "wiki_links": []
+    },
+    {
+      "path": "agent-verification-loop.md",
+      "source_type": "internal_doc",
+      "source_url": null,
+      "retrieval_date": "2026-06-12",
+      "software_version": "1.0",
+      "license": "internal",
+      "checksum_sha256": "fef08f60e71b1425d19ef907e1389dc496ecfdd392ac3cc3938c24a12392f58d",
+      "stable_id": "agent-verification-loop-doc",
+      "role": "quality_doc",
+      "wiki_links": []
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "capabilities_version": "1.0.0",
+  "schema_version": "lsp-capabilities-v1",
+  "repository": "newtontech/gaussian-lsp",
+  "software": "Gaussian",
+  "software_versions_supported": ["Gaussian 16"],
+  "file_types_supported": ["gjf", "com", "mol", "xyz"],
+  "operations": ["check", "context", "complete", "hover", "symbols", "fix"],
+  "sourceProvenance": [
+    {
+      "source_id": "gaussian-official-docs",
+      "name": "Gaussian Official Documentation",
+      "url": "https://gaussian.com/input/",
+      "version": "Gaussian 16",
+      "retrieval_date": "2026-06-10",
+      "license": "proprietary",
+      "manifest_entry": "gaussian-input-format-v1",
+      "diagnostic_codes_sourced": [
+        "G001", "G002", "G010", "G011", "G012", "G020", "G021", "G022",
+        "G030", "G031", "G040",
+        "GAUSS-E030", "GAUSS-E031", "GAUSS-E032", "GAUSS-E033",
+        "GAUSS-E034", "GAUSS-E035", "GAUSS-W030", "GAUSS-W031"
+      ]
+    },
+    {
+      "source_id": "gaussian-route-syntax-docs",
+      "name": "Gaussian Route Syntax Documentation",
+      "url": "https://gaussian.com/input/route.htm",
+      "version": "Gaussian 16",
+      "retrieval_date": "2026-06-10",
+      "license": "proprietary",
+      "manifest_entry": "gaussian-route-syntax-v1",
+      "diagnostic_codes_sourced": [
+        "G001", "G002", "G020", "G021", "G022", "G030", "G031"
+      ]
+    },
+    {
+      "source_id": "gaussian-keywords-reference",
+      "name": "Gaussian Keywords Reference",
+      "url": "https://gaussian.com/keywords/",
+      "version": "Gaussian 16",
+      "retrieval_date": "2026-06-10",
+      "license": "proprietary",
+      "manifest_entry": "gaussian-keywords-reference-v1",
+      "diagnostic_codes_sourced": [
+        "G001", "G002", "G020", "GAUSS-W030", "GAUSS-W031"
+      ]
+    },
+    {
+      "source_id": "diagnostic-engine-v1-doc",
+      "name": "Diagnostic Engine v1 Documentation",
+      "path": "diagnostic-engine-v1.md",
+      "version": "1.0",
+      "retrieval_date": "2026-06-12",
+      "license": "internal",
+      "manifest_entry": "gaussian-diagnostic-engine-v1-doc",
+      "diagnostic_codes_sourced": ["all"]
+    },
+    {
+      "source_id": "internal-lint-provider",
+      "name": "Python Lint Provider rules",
+      "path": "src/gaussian_lsp/features/lint.py",
+      "version": "1.0",
+      "retrieval_date": "2026-06-12",
+      "license": "internal",
+      "manifest_entry": null,
+      "diagnostic_codes_sourced": [
+        "G001", "G002", "G010", "G011", "G012", "G020", "G021", "G022",
+        "G030", "G031", "G040"
+      ]
+    },
+    {
+      "source_id": "internal-server-diagnostics",
+      "name": "Server built-in diagnostics",
+      "path": "src/gaussian_lsp/server.py",
+      "version": "1.0",
+      "retrieval_date": "2026-06-12",
+      "license": "internal",
+      "manifest_entry": null,
+      "diagnostic_codes_sourced": [
+        "structural", "link0", "route_semantic", "chemical", "basis", "geometry", "zmatrix", "core"
+      ]
+    },
+    {
+      "source_id": "internal-typescript-diagnostics",
+      "name": "TypeScript diagnostic rules",
+      "path": "src/parsers/diagnostics.ts",
+      "version": "1.0",
+      "retrieval_date": "2026-06-12",
+      "license": "internal",
+      "manifest_entry": null,
+      "diagnostic_codes_sourced": [
+        "GAUSS-E030", "GAUSS-E031", "GAUSS-E032", "GAUSS-E033",
+        "GAUSS-E034", "GAUSS-E035", "GAUSS-W030", "GAUSS-W031"
+      ]
+    }
+  ],
+  "diagnostic_categories": {
+    "schema": {
+      "codes": ["G001", "G002", "G010", "G020", "GAUSS-E030", "GAUSS-W030", "GAUSS-W031"],
+      "blocking_default": true
+    },
+    "type/value": {
+      "codes": ["G011", "G012", "GAUSS-E032", "GAUSS-E033"],
+      "blocking_default": true
+    },
+    "semantic consistency": {
+      "codes": ["G021", "G022", "G030", "G031", "GAUSS-E034", "GAUSS-E035"],
+      "blocking_default": false
+    },
+    "style/deprecation": {
+      "codes": ["G040"],
+      "blocking_default": false
+    },
+    "cross-file reference": {
+      "codes": ["basis_file", "chk_file"],
+      "blocking_default": true
+    },
+    "preflight/runtime-risk": {
+      "codes": ["scf_convergence", "memory_allocation"],
+      "blocking_default": false
+    }
+  },
+  "openqc": {
+    "lsp_check_family": true,
+    "language_detection": ["gjf", "com", "mol", "xyz"],
+    "executable_configurable": true,
+    "cli_smoke_test": "scripts/openqc_smoke.sh",
+    "compatibility_report_entry": "lsp-capabilities.json"
+  }
+}

@@ -1,0 +1,17 @@
+%mem=256MB
+%nproc=4
+%chk=test.chk
+
+#p HF/STO-3G sp
+
+Water single point - SCF not converged
+
+0 1
+O  0.000000  0.000000  0.117370
+H  0.000000  0.756950 -0.469480
+H  0.000000 -0.756950 -0.469480
+
+SCF Done:  E(RHF) = -74.9651864630     A.U. after   50 cycles
+Convergence failure -- SCF cycle limit reached.
+
+Job completion: Error termination via L301.
