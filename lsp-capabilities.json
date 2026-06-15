@@ -2,6 +2,20 @@
   "capabilities_version": "1.0.0",
   "schema_version": "lsp-capabilities-v1",
   "version": "0.2.11",
+  "release_provenance": {
+    "version_file": "VERSION",
+    "changelog": "CHANGELOG.md",
+    "tag_policy": "Git tags SHOULD match the VERSION file at release time (semver).",
+    "supported_gaussian_versions": ["Gaussian 16"],
+    "capture_date": "2026-06-15",
+    "extraction_commit": "b80845358ad11f01bb0713d0fca2ac4f4067e581",
+    "closed_loop_support": {
+      "status": "preview",
+      "log_diagnostics": true,
+      "fix_previews": true,
+      "requires_binary": false
+    }
+  },
   "languageId": "gaussian",
   "repository": "newtontech/gaussian-lsp",
   "software": "Gaussian",

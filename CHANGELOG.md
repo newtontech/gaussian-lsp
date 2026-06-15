@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- `VERSION` file and `release_provenance` metadata in `lsp-capabilities.json` for OpenQC provenance gates (#89)
 - Python runtime log parser (`src/gaussian_lsp/log_parser.py`) closing the backend-only parity gap with the TypeScript `parseLog` surface (#87). Implements GAUSS-E034 (SCF convergence failure), GAUSS-E035 (geometry/Z-matrix parse failure), GAUSS-E036 (catch-all `Error termination via Lnk1e`), GAUSS-E037 (structured per-Link fault with role/cause/hint from the LINK_KNOWLEDGE table), GAUSS-E038 (optimization step budget exhausted), GAUSS-E039 (memory/disk exhaustion), GAUSS-W034 (per-iteration optimization convergence warning), and GAUSS-I031 (truncated/incomplete log marker). Every blocking finding carries an explicit `refusal_reason` explaining why the fix is unsafe to auto-apply.
 - New `gaussian-lsp-tool parse-log` subcommand plus auto-detection in `gaussian-lsp-tool check`/`fix` for `.log`/`.out` files. `check` and `fix` route through the log parser when the file looks like a Gaussian runtime output.
 - Realistic runtime log fixtures for SCF L502 failure (`error_termination_l502.log`), basis-set L301 failure (`error_termination_l301.log`), optimization exhaustion (`optimization_not_converged.log`), memory exhaustion (`memory_exhausted.log`), geometry/Z-matrix failure (`geometry_parse_failure.log`), clean run (`normal_termination.out`), and truncated log (`empty_truncated.log`) under `tests/fixtures/log/`.

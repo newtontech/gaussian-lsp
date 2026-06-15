@@ -11,7 +11,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 def test_governance_guidance_files_exist() -> None:
     required = (
         "AGENTS.md",
+        "CHANGELOG.md",
         "CONTRIBUTING.md",
+        "VERSION",
         ".governance-kit.yml",
         ".github/PULL_REQUEST_TEMPLATE.md",
         "docs/LLM-WIKI-PLAN.md",
