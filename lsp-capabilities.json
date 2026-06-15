@@ -1,11 +1,60 @@
 {
   "capabilities_version": "1.0.0",
   "schema_version": "lsp-capabilities-v1",
+  "version": "0.2.11",
+  "languageId": "gaussian",
   "repository": "newtontech/gaussian-lsp",
   "software": "Gaussian",
   "software_versions_supported": ["Gaussian 16"],
   "file_types_supported": ["gjf", "com", "mol", "xyz"],
+  "maturity": "preview",
   "operations": ["check", "context", "complete", "hover", "symbols", "fix"],
+  "capabilities": [
+    "agent-envelope",
+    "agent-json-cli",
+    "blocking-gate",
+    "code-actions",
+    "completion",
+    "context",
+    "cross-artifact-graph",
+    "diagnostic-engine-v1",
+    "diagnostics",
+    "fix-preview",
+    "fleet-regression-fixtures",
+    "hover",
+    "manifest",
+    "openqc-context",
+    "rich-diagnostics",
+    "routing",
+    "source-provenance",
+    "symbols",
+    "version-aware-keywords"
+  ],
+  "agentCli": {
+    "command": "gaussian-lsp-tool",
+    "operations": [
+      "capabilities",
+      "check",
+      "context",
+      "complete",
+      "hover",
+      "symbols",
+      "fix",
+      "manifest",
+      "preflight"
+    ],
+    "jsonFormat": true,
+    "failOnBlocking": true
+  },
+  "fixturePaths": {
+    "valid": ["tests/fixtures/valid", "tests/fixtures/preflight/valid_scf"],
+    "invalid": ["tests/fixtures/invalid", "tests/fixtures/preflight/missing_route"],
+    "logs": ["tests/fixtures/log"]
+  },
+  "diagnostic_coverage": {
+    "status": "partial",
+    "notes": "Route, geometry, and preflight rules are implemented; full Gaussian 16 grammar and exhaustive version-gated rules remain in progress (issue #79)."
+  },
   "sourceProvenance": [
     {
       "source_id": "gaussian-official-docs",

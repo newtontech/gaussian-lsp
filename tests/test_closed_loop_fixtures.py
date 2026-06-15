@@ -89,11 +89,42 @@ class TestRuleFixtureCatalog:
 
 
 class TestOpenQCSmokeEvidence:
+    REQUIRED_OPENQC_FIELDS = ("lsp_check_family", "compatibility_report_entry")
+
     def test_lsp_capabilities_has_provenance_and_openqc(self) -> None:
         caps_path = Path(__file__).parent.parent / "lsp-capabilities.json"
         payload = json.loads(caps_path.read_text(encoding="utf-8"))
         assert payload["openqc"]["lsp_check_family"] is True
         assert len(payload.get("sourceProvenance", [])) >= 1
+
+    def test_lsp_capabilities_manifest_has_fleet_capabilities_section(self) -> None:
+        caps_path = Path(__file__).parent.parent / "lsp-capabilities.json"
+        payload = json.loads(caps_path.read_text(encoding="utf-8"))
+
+        assert payload["languageId"] == "gaussian"
+        assert payload["repository"] == "newtontech/gaussian-lsp"
+        assert payload.get("version") or payload.get("capabilities_version")
+
+        capabilities = payload.get("capabilities")
+        assert isinstance(capabilities, list) and capabilities, "capabilities section required"
+        for required in (
+            "agent-envelope",
+            "agent-json-cli",
+            "diagnostic-engine-v1",
+            "diagnostics",
+            "openqc-context",
+            "source-provenance",
+        ):
+            assert required in capabilities, f"missing fleet capability: {required}"
+
+        openqc = payload.get("openqc", {})
+        for field in self.REQUIRED_OPENQC_FIELDS:
+            assert field in openqc and openqc[field], f"missing openqc.{field}"
+
+        agent_cli = payload.get("agentCli", {})
+        assert agent_cli.get("command") == "gaussian-lsp-tool"
+        assert "check" in agent_cli.get("operations", [])
+        assert payload.get("diagnostic_coverage", {}).get("status") == "partial"
 
     def test_raw_assets_manifest_exists(self) -> None:
         manifest = Path(__file__).parent.parent / "raw/assets/manifest.json"
