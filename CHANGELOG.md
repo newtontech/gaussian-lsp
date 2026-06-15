@@ -1,6 +1,11 @@
 ## [Unreleased]
 
 ### Added
+- OpenQC v1 docstring/wiki/raw traceability report (`reports/docstring-wiki-raw-traceability.json`) with schema `openqc.lsp.traceability.v1`, plus a deterministic generator/validator at `scripts/check_docstring_traceability.py` (#94). The report traces every diagnostic rule code constant from the Python lint provider, Python log parser, and TypeScript diagnostics surface through concrete wiki pages and raw evidence assets. `summary.docstringsLinked == summary.docstringsTotal`, and `brokenWikiLinks`, `wikiSourcesWithoutRaw`, and `rawManifestFailures` are all zero in strict mode.
+- `docstring-traceability` capability in `lsp-capabilities.json` plus `openqc.traceability_report_entry` and `openqc.traceability_schema` pointers so the OpenQC family gate can discover the report.
+- `CODE_INCOMPLETE_LOG = "GAUSS-I031"` constant in `src/gaussian_lsp/log_parser.py` so the truncated-log rule has a docstring symbol on par with the other GAUSS-Exx/Wxx codes; `log_manifest()` now advertises the code alongside `ALL_LOG_CODES`.
+- `scripts/openqc_smoke.sh` checks the traceability report under section 5.
+- `raw/assets/manifest.json` `wiki_links` rewritten to point at concrete files under `wiki/` so the manifest's own cross-artifact graph resolves.
 - `VERSION` file and `release_provenance` metadata in `lsp-capabilities.json` for OpenQC provenance gates (#89)
 - Python runtime log parser (`src/gaussian_lsp/log_parser.py`) closing the backend-only parity gap with the TypeScript `parseLog` surface (#87). Implements GAUSS-E034 (SCF convergence failure), GAUSS-E035 (geometry/Z-matrix parse failure), GAUSS-E036 (catch-all `Error termination via Lnk1e`), GAUSS-E037 (structured per-Link fault with role/cause/hint from the LINK_KNOWLEDGE table), GAUSS-E038 (optimization step budget exhausted), GAUSS-E039 (memory/disk exhaustion), GAUSS-W034 (per-iteration optimization convergence warning), and GAUSS-I031 (truncated/incomplete log marker). Every blocking finding carries an explicit `refusal_reason` explaining why the fix is unsafe to auto-apply.
 - New `gaussian-lsp-tool parse-log` subcommand plus auto-detection in `gaussian-lsp-tool check`/`fix` for `.log`/`.out` files. `check` and `fix` route through the log parser when the file looks like a Gaussian runtime output.

@@ -87,7 +87,27 @@ for f in src/gaussian_lsp/rich_diagnostics.py src/gaussian_lsp/tool.py src/gauss
     fi
 done
 
-# 5. Summary
+# 5. Check OpenQC v1 docstring/wiki/raw traceability report (issue #94)
+echo ""
+echo "--- 5. docstring/wiki/raw traceability ---"
+TRACE_REPORT="$REPO_ROOT/reports/docstring-wiki-raw-traceability.json"
+if [ -f "$TRACE_REPORT" ]; then
+    if python3 "$REPO_ROOT/scripts/check_docstring_traceability.py" --strict > /dev/null 2>&1; then
+        SCHEMA=$(python3 -c "import json; d=json.load(open('$TRACE_REPORT')); print(d['schemaVersion'])")
+        DOCSTRINGS=$(python3 -c "import json; d=json.load(open('$TRACE_REPORT')); print(d['summary']['docstringsTotal'])")
+        RULES=$(python3 -c "import json; d=json.load(open('$TRACE_REPORT')); print(d['summary']['ruleIdsTotal'])")
+        echo "OK: traceability report ($SCHEMA, $DOCSTRINGS docstrings, $RULES rules)"
+    else
+        echo "FAIL: traceability report present but strict validation failed"
+        python3 "$REPO_ROOT/scripts/check_docstring_traceability.py" --strict || true
+        EXIT=1
+    fi
+else
+    echo "FAIL: reports/docstring-wiki-raw-traceability.json not found"
+    EXIT=1
+fi
+
+# 6. Summary
 echo ""
 echo "=== Summary ==="
 if [ $EXIT -eq 0 ]; then

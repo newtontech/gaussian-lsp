@@ -33,6 +33,7 @@
     "cross-artifact-graph",
     "diagnostic-engine-v1",
     "diagnostics",
+    "docstring-traceability",
     "fix-preview",
     "fleet-regression-fixtures",
     "hover",
@@ -227,6 +228,8 @@
     "language_detection": ["gjf", "com", "mol", "xyz"],
     "executable_configurable": true,
     "cli_smoke_test": "scripts/openqc_smoke.sh",
-    "compatibility_report_entry": "lsp-capabilities.json"
+    "compatibility_report_entry": "lsp-capabilities.json",
+    "traceability_report_entry": "reports/docstring-wiki-raw-traceability.json",
+    "traceability_schema": "openqc.lsp.traceability.v1"
   }
 }
