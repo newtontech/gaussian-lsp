@@ -1,0 +1,31 @@
+schema: scientific-lsp-skill/v1
+name: gaussian
+software: gaussian
+display_name: Gaussian
+description: Gaussian input preflight for generated .gjf/.com job files.
+package:
+  name: gaussian-lsp
+  install: pip install gaussian-lsp
+entrypoints:
+  server: gaussian-lsp
+  tool: gaussian-lsp-tool
+file_patterns:
+  - "*.gjf"
+  - "*.com"
+operations:
+  - capabilities
+  - check
+  - context
+  - complete
+  - hover
+  - symbols
+  - fix
+diagnostic_contract: DiagnosticEnvelope/v1
+blocking_policy:
+  mode: warning-only
+  description: Use --fail-on-blocking when generated inputs must be launch-ready.
+source_provenance:
+  -
+    kind: official_docs
+    label: Gaussian input overview
+    url: https://gaussian.com/input/

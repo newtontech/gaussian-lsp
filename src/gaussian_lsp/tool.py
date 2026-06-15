@@ -9,9 +9,9 @@ from typing import Any
 
 from .agent_operations import operation_path, with_capabilities
 from .rich_diagnostics import agent_check_payload
+from .skill_export import export_skill, skill_spec_text
 
 SOFTWARE = "gaussian"
-
 
 def _file_type(path: Path) -> str:
     name = path.name.upper()
@@ -20,7 +20,6 @@ def _file_type(path: Path) -> str:
     if "." in path.name:
         return path.suffix.lstrip(".").lower()
     return name.lower()
-
 
 def _collect_diagnostics(path: Path) -> list[Any]:
     from .features.diagnostic import DiagnosticProvider
@@ -32,7 +31,6 @@ def _collect_diagnostics(path: Path) -> list[Any]:
     diagnostics.extend(LintProvider(None).lint(text))  # type: ignore[arg-type]
     diagnostics.extend(TypecheckProvider().validate(text))
     return diagnostics
-
 
 def _load_intent(path: Path) -> dict[str, Any] | None:
     """Load the optional preflight intent contract for a case directory.
@@ -51,7 +49,6 @@ def _load_intent(path: Path) -> dict[str, Any] | None:
         return None
     return data if isinstance(data, dict) else None
 
-
 def _looks_like_workspace(path: Path) -> bool:
     """Detect whether a path is a real Gaussian generated-input workspace.
 
@@ -64,7 +61,6 @@ def _looks_like_workspace(path: Path) -> bool:
     from .preflight import looks_like_gaussian_workspace
 
     return looks_like_gaussian_workspace(path)
-
 
 def _collect_preflight(
     path: Path, intent: dict[str, Any] | None
@@ -81,7 +77,6 @@ def _collect_preflight(
     version_assumption = resolve_version_assumption(intent)
     return diagnostics, graph.to_json(), version_assumption
 
-
 def _resolve_input_path(path: Path) -> Path:
     """Resolve the Gaussian input file from a path that may be a dir or .gjf."""
     if path.is_dir():
@@ -97,7 +92,6 @@ def _resolve_input_path(path: Path) -> Path:
                 return candidate
         return path / "input.gjf"
     return path
-
 
 def check_path(path: Path) -> dict[str, Any]:
     uri = path.resolve().as_uri()
@@ -125,13 +119,11 @@ def check_path(path: Path) -> dict[str, Any]:
     )
     return payload
 
-
 # Codes already emitted by the legacy analyzer that overlap with the universal
 # preflight surface. We keep the legacy emission (it carries the existing test
 # contract) and drop the duplicate preflight variant to avoid noisy double
 # reports. The preflight shape is still proven by every other fixture.
 _OVERLAP_CODES_BY_LEGACY: dict[str, set[str]] = {}
-
 
 def _dedupe_preflight(legacy: list[Any], preflight: list[Any]) -> list[Any]:
     """Drop preflight diagnostics whose finding the legacy analyzer already emitted."""
@@ -148,7 +140,6 @@ def _dedupe_preflight(legacy: list[Any], preflight: list[Any]) -> list[Any]:
         for item in preflight
         if (item.get("code") if isinstance(item, dict) else None) not in suppressed_preflight
     ]
-
 
 def preflight_path(path: Path) -> dict[str, Any]:
     """Return a preflight-only payload (universal checks, no legacy analyzer)."""
@@ -171,7 +162,6 @@ def preflight_path(path: Path) -> dict[str, Any]:
         artifacts=graph.to_json(),
     )
     return with_capabilities(payload, "preflight")
-
 
 def manifest_path(path: Path | None = None) -> dict[str, Any]:
     """Return the fleet preflight manifest.
@@ -197,7 +187,6 @@ def manifest_path(path: Path | None = None) -> dict[str, Any]:
                 fixtures = [item for item in data["fixtures"] if isinstance(item, dict)]
     return fleet_manifest(fixtures=fixtures)
 
-
 def _operation_payload(
     path: Path,
     operation: str,
@@ -214,10 +203,15 @@ def _operation_payload(
         character=character,
     )
 
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="gaussian-lsp-tool")
     subparsers = parser.add_subparsers(dest="operation", required=True)
+    capabilities = subparsers.add_parser("capabilities")
+    capabilities.add_argument("--format", choices=["json"], default="json")
+    skill_spec = subparsers.add_parser("skill-spec")
+    skill_spec.add_argument("--format", choices=["json", "yaml"], default="json")
+    skill_export = subparsers.add_parser("skill-export")
+    skill_export.add_argument("--output", type=Path, required=True)
     for operation in (
         "check",
         "preflight",
@@ -257,6 +251,36 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--fail-on-blocking", action="store_true")
     args = parser.parse_args(argv)
 
+    if args.operation == "capabilities":
+        from .skill_export import SKILL_SPEC
+
+        payload = {
+            "schema": "OpenQCLspCapabilities",
+            "version": 1,
+            "id": SKILL_SPEC["package"]["name"],
+            "software": SKILL_SPEC["software"],
+            "displayName": SKILL_SPEC["display_name"],
+            "executable": SKILL_SPEC["entrypoints"]["server"],
+            "filePatterns": SKILL_SPEC["file_patterns"],
+            "capabilities": ["diagnostics", "rich-diagnostics", "completion", "hover", "symbols", "fix-preview", "pluggable-skill"],
+            "agentCli": {
+                "command": SKILL_SPEC["entrypoints"]["tool"],
+                "operations": SKILL_SPEC["operations"],
+                "jsonFormat": True,
+                "failOnBlocking": True,
+            },
+            "diagnosticContract": SKILL_SPEC["diagnostic_contract"],
+        }
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0
+
+    if args.operation == "skill-spec":
+        print(skill_spec_text(args.format))
+        return 0
+    if args.operation == "skill-export":
+        print(json.dumps(export_skill(args.output), indent=2, sort_keys=True))
+        return 0
+
     if args.operation == "check":
         payload = with_capabilities(check_path(args.path), "check")
         print(json.dumps(payload, indent=2, sort_keys=True))
@@ -272,7 +296,6 @@ def main(argv: list[str] | None = None) -> int:
     payload = _operation_payload(args.path, args.operation, args.line, args.character)
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
