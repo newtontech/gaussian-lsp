@@ -8,7 +8,7 @@
   "software_versions_supported": ["Gaussian 16"],
   "file_types_supported": ["gjf", "com", "mol", "xyz"],
   "maturity": "preview",
-  "operations": ["check", "context", "complete", "hover", "symbols", "fix"],
+  "operations": ["check", "parse-log", "context", "complete", "hover", "symbols", "fix"],
   "capabilities": [
     "agent-envelope",
     "agent-json-cli",
@@ -26,6 +26,7 @@
     "openqc-context",
     "rich-diagnostics",
     "routing",
+    "runtime-log",
     "source-provenance",
     "symbols",
     "version-aware-keywords"
@@ -41,6 +42,7 @@
       "symbols",
       "fix",
       "manifest",
+      "parse-log",
       "preflight"
     ],
     "jsonFormat": true,
@@ -53,7 +55,7 @@
   },
   "diagnostic_coverage": {
     "status": "partial",
-    "notes": "Route, geometry, and preflight rules are implemented; full Gaussian 16 grammar and exhaustive version-gated rules remain in progress (issue #79)."
+    "notes": "Route, geometry, preflight, and runtime-log (.log/.out) rules are implemented; full Gaussian 16 grammar and exhaustive version-gated rules remain in progress (issue #79, #87)."
   },
   "sourceProvenance": [
     {
@@ -142,6 +144,31 @@
         "GAUSS-E030", "GAUSS-E031", "GAUSS-E032", "GAUSS-E033",
         "GAUSS-E034", "GAUSS-E035", "GAUSS-W030", "GAUSS-W031"
       ]
+    },
+    {
+      "source_id": "internal-python-log-parser",
+      "name": "Python runtime log parser (issue #87)",
+      "path": "src/gaussian_lsp/log_parser.py",
+      "version": "1.0",
+      "retrieval_date": "2026-06-15",
+      "license": "internal",
+      "manifest_entry": null,
+      "diagnostic_codes_sourced": [
+        "GAUSS-E034", "GAUSS-E035", "GAUSS-E036", "GAUSS-E037",
+        "GAUSS-E038", "GAUSS-E039", "GAUSS-W034", "GAUSS-I031"
+      ]
+    },
+    {
+      "source_id": "gaussian-output-format-walkthrough",
+      "name": "Typical Gaussian Output File walkthrough (Zipse)",
+      "url": "https://zipse.cup.uni-muenchen.de/teaching/computational-chemistry-2/topics/a-typical-gaussian-output-file/",
+      "version": "Gaussian 16",
+      "retrieval_date": "2026-06-12",
+      "license": "CC-BY-SA",
+      "manifest_entry": "gaussian-output-format-walkthrough",
+      "diagnostic_codes_sourced": [
+        "GAUSS-E034", "GAUSS-E036", "GAUSS-E037", "GAUSS-E038"
+      ]
     }
   ],
   "diagnostic_categories": {
@@ -154,7 +181,10 @@
       "blocking_default": true
     },
     "semantic consistency": {
-      "codes": ["G021", "G022", "G030", "G031", "GAUSS-E034", "GAUSS-E035"],
+      "codes": [
+        "G021", "G022", "G030", "G031",
+        "GAUSS-E034", "GAUSS-E035", "GAUSS-W034"
+      ],
       "blocking_default": false
     },
     "style/deprecation": {
@@ -165,8 +195,16 @@
       "codes": ["basis_file", "chk_file"],
       "blocking_default": true
     },
+    "syntax": {
+      "codes": ["GAUSS-E035"],
+      "blocking_default": true
+    },
     "preflight/runtime-risk": {
-      "codes": ["scf_convergence", "memory_allocation"],
+      "codes": [
+        "scf_convergence", "memory_allocation",
+        "GAUSS-E034", "GAUSS-E036", "GAUSS-E037", "GAUSS-E038",
+        "GAUSS-E039", "GAUSS-I031"
+      ],
       "blocking_default": false
     }
   },

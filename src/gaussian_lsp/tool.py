@@ -101,6 +101,13 @@ def _resolve_input_path(path: Path) -> Path:
 
 def check_path(path: Path) -> dict[str, Any]:
     uri = path.resolve().as_uri()
+    # Runtime output logs are a separate DiagnosticEnvelope/v1 surface: they
+    # record what happened during a Gaussian run rather than describing the
+    # input that will be run. Route them through the log parser directly so
+    # `gaussian-lsp-tool check water.log` returns runtime findings instead
+    # of trying (and failing) to lint a log as if it were a .gjf input.
+    if path.is_file() and _is_runtime_log(path):
+        return parse_log_path(path, operation="check")
     intent = _load_intent(path)
     diagnostics = _collect_diagnostics(path) if path.is_file() else []
     # Universal preflight diagnostics augment the legacy analyzer output, but
@@ -124,6 +131,47 @@ def check_path(path: Path) -> dict[str, Any]:
         artifacts=artifacts,
     )
     return payload
+
+
+def _is_runtime_log(path: Path) -> bool:
+    """Detect whether ``path`` is a Gaussian runtime output log.
+
+    The legacy single-file path treats ``.log``/``.out`` as opaque text; with
+    the log parser online we route them through :func:`parse_log_path` when
+    they actually contain Gaussian runtime markers. Unknown ``.log`` files
+    (e.g. server logs) stay on the legacy single-file path.
+    """
+    from .log_parser import is_gaussian_log
+
+    return is_gaussian_log(path)
+
+
+def parse_log_path(path: Path, *, operation: str = "parse-log") -> dict[str, Any]:
+    """Parse a Gaussian ``.log``/``.out`` file and return a v1 envelope payload.
+
+    The payload is structurally identical to :func:`check_path`'s output
+    (DiagnosticEnvelope/v1) but populated exclusively from runtime-output
+    findings -- the universal preflight and legacy analyzer do not run on
+    runtime logs because there is no input to lint.
+    """
+    from .log_parser import parse_log
+
+    text = path.read_text(encoding="utf-8", errors="ignore") if path.is_file() else ""
+    diagnostics = parse_log(text, path=str(path))
+    payload = agent_check_payload(
+        software=SOFTWARE,
+        uri=path.resolve().as_uri(),
+        operation=operation,
+        diagnostics=diagnostics,
+        path=str(path),
+        file_type=_file_type(path),
+    )
+    # Surface the log-capability manifest inline so consumers do not need a
+    # second CLI call to discover the rule surface for a runtime log.
+    from .log_parser import log_manifest
+
+    payload["log_manifest"] = log_manifest()
+    return with_capabilities(payload, operation)
 
 
 # Codes already emitted by the legacy analyzer that overlap with the universal
@@ -204,6 +252,11 @@ def _operation_payload(
     line: int = 0,
     character: int = 0,
 ) -> dict[str, Any]:
+    # Runtime log files have their own parser surface. Position-aware
+    # operations (context/hover/symbols) and fix on a log file all need to
+    # see findings from parse_log, not the .gjf/.com legacy analyzer.
+    if path.is_file() and _is_runtime_log(path):
+        return _log_operation_payload(path, operation, line=line, character=character)
     return operation_path(
         path,
         operation,
@@ -215,6 +268,48 @@ def _operation_payload(
     )
 
 
+def _log_operation_payload(
+    path: Path,
+    operation: str,
+    *,
+    line: int,
+    character: int,
+) -> dict[str, Any]:
+    """Build a payload for position-aware operations on a runtime log file.
+
+    Mirrors :func:`parse_log_path` for the diagnostic collection but routes
+    through the generic agent_operations position/fix helpers so consumers
+    can call ``fix``, ``hover``, ``symbols`` etc. on a log file the same way
+    they would on an input.
+    """
+    from .agent_operations import operation_path as _op_path
+    from .log_parser import parse_log
+
+    text = path.read_text(encoding="utf-8", errors="ignore")
+
+    def _collect(_path: Path) -> list[Any]:
+        # The log parser returns v1 dicts already; the agent operations
+        # helpers expect either LSP Diagnostics or dicts and our rich
+        # serializer in rich_diagnostics handles both shapes.
+        return list(parse_log(text, path=str(path)))
+
+    payload = _op_path(
+        path,
+        operation,
+        software=SOFTWARE,
+        file_type_func=_file_type,
+        collect_diagnostics=_collect,
+        line=line,
+        character=character,
+    )
+    # The log capability manifest is inlined so consumers do not need a
+    # second CLI call to discover the rule surface for a runtime log.
+    from .log_parser import log_manifest
+
+    payload["log_manifest"] = log_manifest()
+    return payload
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="gaussian-lsp-tool")
     subparsers = parser.add_subparsers(dest="operation", required=True)
@@ -222,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
         "check",
         "preflight",
         "manifest",
+        "parse-log",
         "context",
         "complete",
         "hover",
@@ -255,6 +351,8 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--fail-on-blocking", action="store_true")
         if operation == "preflight":
             sub.add_argument("--fail-on-blocking", action="store_true")
+        if operation == "parse-log":
+            sub.add_argument("--fail-on-blocking", action="store_true")
     args = parser.parse_args(argv)
 
     if args.operation == "check":
@@ -263,6 +361,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if getattr(args, "fail_on_blocking", False) and not payload["ok"] else 0
     if args.operation == "preflight":
         payload = preflight_path(args.path)
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 1 if getattr(args, "fail_on_blocking", False) and not payload["ok"] else 0
+    if args.operation == "parse-log":
+        payload = parse_log_path(args.path)
         print(json.dumps(payload, indent=2, sort_keys=True))
         return 1 if getattr(args, "fail_on_blocking", False) and not payload["ok"] else 0
     if args.operation == "manifest":

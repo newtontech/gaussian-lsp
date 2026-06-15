@@ -1,0 +1,31 @@
+ Entering Gaussian System, Link 0=/scr1/g16/g16
+ ******************************************
+ Gaussian 16: ES64L-G16RevC.01 25-Dec-2020
+                10-Mar-2024
+ ******************************************
+ %chk=water_scf.chk
+ %mem=2GB
+ %nproc=4
+ Will use up to    4 processors via shared memory.
+ ----------------------------------------------------------------------
+ #p RHF/6-31G(d) scf=(maxcycle=32) pop=full
+ ------------------------------------------------------------------
+ water SCF run -- cycle limit hit
+
+ Charge =  0 Multiplicity = 1
+ O                  0.00000000    0.00000000    0.11737800
+ H                  0.00000000    0.75695000   -0.46948000
+ H                  0.00000000   -0.75695000   -0.46948000
+
+ NAtoms=    3 NQM=       3 NMM=     0 NMul=   1.
+ Standard basis: 6-31G(d) (6D, 7F)
+ 28 basis functions, 44 primitive gaussians
+
+ Requested convergence on RMS density matrix=1.00D-08 within  32 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ SCF Done:  E(RHF) =  -74.96590120     A.U. after   32 cycles
+            NFock= 32  Conv=0.45D-03    -V/T= 2.0056
+ Convergence failure -- SCF cycle limit reached.
+ Error termination via Lnk1e in /scr1/g16/l502.exe at Tue Mar 10 15:05:09 2020.

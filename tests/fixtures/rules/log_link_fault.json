@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.log.link_fault",
+  "code": "GAUSS-E037",
+  "severity": "error",
+  "description": "Structured per-Link fault naming the failing executable (l502, l301, l103, l9999, ...).",
+  "input": " Error termination via Lnk1e in /scr1/g16/l301.exe at Tue Mar 10 15:06:43 2020.\n",
+  "expected": {
+    "code": "GAUSS-E037",
+    "rule": "gaussian.log.link_fault",
+    "severity": "error"
+  }
+}

@@ -1,0 +1,50 @@
+ Entering Gaussian System, Link 0=/scr1/g16/g16
+ ******************************************
+ Gaussian 16: ES64L-G16RevC.01 25-Dec-2020
+                10-Mar-2024
+ ******************************************
+ %chk=ethane_opt.chk
+ %mem=8GB
+ %nproc=8
+ ----------------------------------------------------------------------
+ #p B3LYP/6-31G(d) opt freq
+ ------------------------------------------------------------------
+ ethane optimization - did not converge in default steps
+
+ Charge =  0 Multiplicity = 1
+ C                  0.00000000    0.00000000    0.76700000
+ C                  0.00000000    0.00000000   -0.76700000
+ H                  0.00000000    1.02800000    1.15000000
+ H                 -0.89000000   -0.51400000    1.15000000
+ H                  0.89000000   -0.51400000    1.15000000
+ H                  0.00000000   -1.02800000  -1.15000000
+ H                  0.89000000    0.51400000  -1.15000000
+ H                 -0.89000000    0.51400000  -1.15000000
+
+ NAtoms=    8 NQM=       8 NMM=     0 NMul=   1.
+
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+ Berny optimization.
+ Initialization pass.
+
+ !    Initial Parameters    !
+ ! (Angstroms and Degrees)  !
+ ----------------------------
+ ! Name  Definition              Value          Derivative Info.          !
+ ! R1    R(1,2)                  1.534          -DE/DX =   0.0            !
+ ----------------------------
+ Item               Value     Threshold  Converged?
+ Maximum Force            0.000144     0.000450   NO
+ RMS     Force            0.000069     0.000300   NO
+ Maximum Displacement     0.000696     0.001800   NO
+ RMS     Displacement     0.000276     0.001200   NO
+ Predicted change in Energy=-1.928211D-08
+
+ Item               Value     Threshold  Converged?
+ Maximum Force            0.000122     0.000450   NO
+ RMS     Force            0.000054     0.000300   NO
+ Maximum Displacement     0.000571     0.001800   NO
+ RMS     Displacement     0.000224     0.001200   NO
+ Optimization stopped.
+  -- Number of steps exceeded, NStep=  50.
+ Error termination via Lnk1e in /scr1/g16/l9999.exe at Tue Mar 10 15:11:35 2020.

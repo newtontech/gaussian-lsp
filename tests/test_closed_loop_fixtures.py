@@ -145,6 +145,29 @@ class TestOpenQCSmokeEvidence:
         assert rc == 1
 
     def test_log_fixtures_exist_for_runtime_diagnostics(self) -> None:
-        """Log parsing is implemented in TypeScript; Python marks fixtures for CI."""
+        """The Python runtime log parser (issue #87) extends the log fixture
+        surface beyond the original scf_not_converged/scf_converged pair."""
         assert (LOG_FIXTURES / "scf_not_converged.out").exists()
         assert (LOG_FIXTURES / "scf_converged.out").exists()
+        # The runtime-log capability ships at least three additional realistic
+        # failure-mode fixtures (SCF L502, basis L301, optimization L103/L9999,
+        # memory exhaustion, geometry parse failure).
+        for fixture in (
+            "error_termination_l502.log",
+            "error_termination_l301.log",
+            "optimization_not_converged.log",
+            "memory_exhausted.log",
+            "geometry_parse_failure.log",
+            "normal_termination.out",
+        ):
+            assert (LOG_FIXTURES / fixture).exists(), f"missing log fixture: {fixture}"
+
+    def test_parse_log_cli_returns_v1_envelope(self, capsys) -> None:
+        """The parse-log CLI subcommand is part of the closed-loop contract."""
+        rc = tool.main(["parse-log", str(LOG_FIXTURES / "scf_not_converged.out")])
+        assert rc == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["diagnostic_envelope"] == "v1"
+        assert payload["operation"] == "parse-log"
+        assert payload["software"] == "gaussian"
+        assert payload["ok"] is False

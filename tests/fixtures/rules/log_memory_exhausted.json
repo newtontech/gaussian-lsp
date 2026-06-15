@@ -1,0 +1,12 @@
+{
+  "rule": "gaussian.log.memory_exhausted",
+  "code": "GAUSS-E039",
+  "severity": "error",
+  "description": "Runtime memory or disk exhaustion reported by Gaussian before the run completed.",
+  "input": " Not enough memory to allocate work array 1 of length 12345678.\n",
+  "expected": {
+    "code": "GAUSS-E039",
+    "rule": "gaussian.log.memory_exhausted",
+    "severity": "error"
+  }
+}
