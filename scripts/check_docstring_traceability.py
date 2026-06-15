@@ -480,9 +480,9 @@ def assign_trace_ids(catalog: Tuple[RuleSpec, ...]) -> Dict[str, str]:
         specs = sorted(grouped[role_cat], key=lambda s: s.rule_code)
         role, cat_short = role_cat
         for ordinal, spec in enumerate(specs, start=1):
-            mapping[spec.rule_code + "@" + spec.file_role] = (
-                f"GAUSSIAN-{role}-{cat_short}-{ordinal:03d}"
-            )
+            mapping[
+                spec.rule_code + "@" + spec.file_role
+            ] = f"GAUSSIAN-{role}-{cat_short}-{ordinal:03d}"
     return mapping
 
 
