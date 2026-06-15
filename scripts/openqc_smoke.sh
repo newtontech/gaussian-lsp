@@ -33,6 +33,13 @@ if [ -f "$REPO_ROOT/lsp-capabilities.json" ]; then
         echo "FAIL: sourceProvenance missing"
         EXIT=1
     fi
+    HAS_CAPABILITIES=$(python3 -c "import json; d=json.load(open('$REPO_ROOT/lsp-capabilities.json')); caps=d.get('capabilities'); print('yes' if isinstance(caps, list) and len(caps) > 0 else 'no')")
+    if [ "$HAS_CAPABILITIES" = "yes" ]; then
+        echo "OK: capabilities section present"
+    else
+        echo "FAIL: capabilities section missing or empty"
+        EXIT=1
+    fi
 else
     echo "FAIL: lsp-capabilities.json not found"
     EXIT=1
