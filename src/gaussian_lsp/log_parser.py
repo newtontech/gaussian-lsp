@@ -341,14 +341,19 @@ def parse_log(text: str, *, path: str = "") -> list[dict[str, Any]]:
                 link_num = int(et_supervisor.group("link_num"))
                 link_path = et_supervisor.group("link_path")
                 supervisor = et_supervisor.group("link_supervisor")
-            else:
+            elif et_abbrev is not None:
                 # Abbreviated form: ``Error termination via L301.`` -- the
                 # link number is in the ``abbrev_num`` group; we synthesize
                 # a stable link identifier for provenance.
-                assert et_abbrev is not None  # for mypy
                 link_num = int(et_abbrev.group("abbrev_num"))
                 link_path = f"l{link_num}.exe"
                 supervisor = "L{0}".format(link_num)
+            else:
+                # Defensive: should not happen because et_match is the
+                # union of the two regexes above; treat as unknown link.
+                link_num = 0
+                link_path = "l0.exe"
+                supervisor = "L0"
             knowledge = LINK_KNOWLEDGE.get(
                 link_num,
                 {
