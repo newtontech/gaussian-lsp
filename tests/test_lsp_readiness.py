@@ -18,11 +18,6 @@ from gaussian_lsp.features.definition import DefinitionProvider
 from gaussian_lsp.features.references import ReferencesProvider
 from gaussian_lsp.features.rename import RenameProvider, get_rename_provider
 from gaussian_lsp.parser.gjf_parser import (
-    GAUSSIAN_BASIS_SETS,
-    GAUSSIAN_JOB_TYPES,
-    GAUSSIAN_METHODS,
-    VALID_ELEMENTS,
-    GaussianJob,
     GJFParser,
 )
 
@@ -1326,7 +1321,7 @@ class TestRename:
         """Rename angle variable A1."""
         # Position on "A1" in "A1=104.5" (line 11)
         lines = ZMATRIX_INPUT.splitlines()
-        a1_line = next(i for i, l in enumerate(lines) if l.strip().startswith("A1="))
+        a1_line = next(i for i, line in enumerate(lines) if line.strip().startswith("A1="))
         pos = Position(line=a1_line, character=1)
         result = provider.get_rename_edits(ZMATRIX_INPUT, self.URI, pos, "ANGLE")
         assert result is not None
@@ -1453,7 +1448,6 @@ class TestDefinitionCoverageGaps:
         the Z-matrix variable path should return None for the definition itself.
         The route keyword path would then be checked.
         """
-        lines = ZMATRIX_INPUT.splitlines()
         # Line 10 has "R2=0.960" - position on R2
         pos = Position(line=10, character=1)
         result = provider.get_definition(ZMATRIX_INPUT, self.URI, pos)

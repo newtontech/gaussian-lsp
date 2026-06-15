@@ -1,3 +1,12 @@
+## [Unreleased]
+
+### Added
+- Closed-loop fixture tests (`tests/test_closed_loop_fixtures.py`) for DiagnosticEnvelope/v1, fix previews, and OpenQC smoke evidence (#80).
+- Lint cleanup in `tests/test_lsp_readiness.py` so `make check` passes on the maturity branch.
+
+### Fixed
+- `scripts/openqc_smoke.sh` now checks real runtime modules instead of the removed `analyzer.py` stub.
+
 ## [0.2.11] - 2026-03-05
 
 ### Changed
