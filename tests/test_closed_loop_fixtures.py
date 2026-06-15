@@ -171,3 +171,29 @@ class TestOpenQCSmokeEvidence:
         assert payload["operation"] == "parse-log"
         assert payload["software"] == "gaussian"
         assert payload["ok"] is False
+
+
+class TestReleaseProvenance:
+    REPO_ROOT = Path(__file__).resolve().parent.parent
+
+    def test_version_file_matches_capabilities_and_pyproject(self) -> None:
+        version_text = (self.REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        capabilities = json.loads(
+            (self.REPO_ROOT / "lsp-capabilities.json").read_text(encoding="utf-8")
+        )
+        pyproject = (self.REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+        assert version_text == capabilities["version"]
+        assert f'version = "{version_text}"' in pyproject
+        assert capabilities["release_provenance"]["version_file"] == "VERSION"
+        assert capabilities["release_provenance"]["changelog"] == "CHANGELOG.md"
+
+    def test_release_provenance_documents_closed_loop_support(self) -> None:
+        capabilities = json.loads(
+            (self.REPO_ROOT / "lsp-capabilities.json").read_text(encoding="utf-8")
+        )
+        release = capabilities["release_provenance"]
+        assert release["supported_gaussian_versions"] == ["Gaussian 16"]
+        assert release["closed_loop_support"]["log_diagnostics"] is True
+        assert release["closed_loop_support"]["fix_previews"] is True
+        assert release["closed_loop_support"]["requires_binary"] is False
