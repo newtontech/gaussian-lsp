@@ -67,6 +67,25 @@ npm run test:ts
 The TypeScript parser under `src/parsers` is active and covered by
 `npm run typecheck` plus `npm run test:ts:coverage` in CI.
 
+### Release verification
+
+Releases are published from `v*` tag pushes by `.github/workflows/release.yml`.
+The workflow checks that the tag, Python and TypeScript package metadata,
+`VERSION`, and the OpenQC capability manifest agree, then builds the
+distributions and installs the wheel into a new virtual environment. The
+isolated smoke verifies `gaussian-lsp --help`, installed version metadata, the
+agent JSON CLI, and valid, invalid, and runtime-log fixtures before the
+OIDC-enabled `pypi` environment can publish. No long-lived PyPI token is used.
+
+Maintainers can exercise the same artifact smoke before creating a tag:
+
+```bash
+python -m pip install build
+python -m build
+python scripts/verify_release.py --tag v0.2.12
+python scripts/smoke_test_wheel.py --wheel dist/gaussian_lsp-0.2.12-py3-none-any.whl
+```
+
 If your local Python environment is not set up yet, you can reproduce the Python
 suite without modifying the project environment:
 

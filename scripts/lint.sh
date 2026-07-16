@@ -41,9 +41,13 @@ if [ -f Cargo.toml ]; then
 fi
 
 if [ -f pyproject.toml ] || [ -f setup.py ]; then
-  if "$PYTHON_BIN" -m ruff --version >/dev/null 2>&1; then
+  if grep -q '^\[tool\.ruff' pyproject.toml 2>/dev/null \
+    && "$PYTHON_BIN" -m ruff --version >/dev/null 2>&1; then
     py_targets="$(python_lint_targets)"
     "$PYTHON_BIN" -m ruff check $py_targets
+    ran=1
+  elif "$PYTHON_BIN" -m flake8 --version >/dev/null 2>&1; then
+    "$PYTHON_BIN" -m flake8 src
     ran=1
   fi
 fi
