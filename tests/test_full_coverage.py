@@ -496,7 +496,9 @@ H 0.0 0.0 0.0
     def test_server_initialization(self) -> None:
         """Test server is properly initialized."""
         assert server.name == "gaussian-lsp"
-        assert server.version == "0.2.11"
+        from gaussian_lsp import __version__
+
+        assert server.version == __version__
 
 
 class TestParserHelperMethods:

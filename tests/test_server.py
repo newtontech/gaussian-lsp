@@ -370,6 +370,18 @@ class TestMain:
         server_module.main()
         mock_start.assert_called_once()
 
+    @patch("gaussian_lsp.server.server.start_io")
+    def test_main_help_exits_without_starting_server(self, mock_start, capsys):
+        """The console entry point must expose a non-blocking help command."""
+        from gaussian_lsp.server import main
+
+        with pytest.raises(SystemExit) as exc_info:
+            main(["--help"])
+
+        assert exc_info.value.code == 0
+        assert "Gaussian Language Server" in capsys.readouterr().out
+        mock_start.assert_not_called()
+
 
 class TestKeywordDocs:
     """Test keyword documentation."""

@@ -1,6 +1,10 @@
 ## [Unreleased]
 
+## [0.2.12] - 2026-07-16
+
 ### Added
+- Tag-only PyPI trusted-publishing workflow using GitHub OIDC and the protected `pypi` environment.
+- Fresh-wheel release smoke covering installed version metadata, server help/version, agent CLI, and valid, invalid, and runtime-log fixtures.
 - OpenQC v1 docstring/wiki/raw traceability report (`reports/docstring-wiki-raw-traceability.json`) with schema `openqc.lsp.traceability.v1`, plus a deterministic generator/validator at `scripts/check_docstring_traceability.py` (#94). The report traces every diagnostic rule code constant from the Python lint provider, Python log parser, and TypeScript diagnostics surface through concrete wiki pages and raw evidence assets. `summary.docstringsLinked == summary.docstringsTotal`, and `brokenWikiLinks`, `wikiSourcesWithoutRaw`, and `rawManifestFailures` are all zero in strict mode.
 - `docstring-traceability` capability in `lsp-capabilities.json` plus `openqc.traceability_report_entry` and `openqc.traceability_schema` pointers so the OpenQC family gate can discover the report.
 - `CODE_INCOMPLETE_LOG = "GAUSS-I031"` constant in `src/gaussian_lsp/log_parser.py` so the truncated-log rule has a docstring symbol on par with the other GAUSS-Exx/Wxx codes; `log_manifest()` now advertises the code alongside `ALL_LOG_CODES`.
@@ -16,6 +20,7 @@
 - Lint cleanup in `tests/test_lsp_readiness.py` so `make check` passes on the maturity branch.
 
 ### Changed
+- Aligned Python, TypeScript, VERSION, package, and OpenQC capability metadata for the 0.2.12 release.
 - `gaussian-lsp-tool fix` now preserves first-party actions from diagnostics (log parser and preflight) and surfaces `refusal_reason` for every unsafe quickfix (#87).
 - `lsp-capabilities.json` adds `runtime-log` capability, `parse-log` operation, log-parser source provenance, and the runtime-log codes in the diagnostic categories (#87).
 - `wiki/synthesis/diagnostics-rule-catalog.md` documents the runtime-log capability with rule codes, Link knowledge table, and CLI examples.

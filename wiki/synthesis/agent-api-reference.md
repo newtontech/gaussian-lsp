@@ -92,7 +92,7 @@ outline_json = provider.get_outline_json(content)
   "metadata": {
     "software": "gaussian",
     "file_type": "input",
-    "parser_version": "0.2.11"
+    "parser_version": "0.2.12"
   }
 }
 ```

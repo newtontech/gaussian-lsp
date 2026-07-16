@@ -667,7 +667,7 @@ export function nextTokenSuggestions(
 export function getCodeIntelligenceAPI(): Record<string, unknown> {
   return {
     name: 'gaussian-lsp',
-    version: '0.2.11',
+    version: '0.2.12',
     language: 'gaussian-input',
     description: 'Language Server Protocol for Gaussian quantum chemistry input files',
     capabilities: {

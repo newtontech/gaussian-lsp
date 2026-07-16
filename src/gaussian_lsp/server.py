@@ -1,7 +1,9 @@
 """Gaussian Language Server Protocol implementation."""
 
+import argparse
 import logging
 import re
+import sys
 from typing import Dict, List, Optional, Set, Tuple
 
 from lsprotocol import types
@@ -1307,10 +1309,18 @@ def parse_gjf_document(content: str) -> Optional[GaussianJob]:
         return None
 
 
-def main() -> None:
-    """Start the server."""
+def main(argv: Optional[List[str]] = None) -> None:
+    """Start the server after parsing explicit programmatic arguments."""
+    parser = argparse.ArgumentParser(description="Gaussian Language Server")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.parse_args([] if argv is None else argv)
     server.start_io()
 
 
+def cli() -> None:
+    """Console entry point that parses command-line arguments."""
+    main(sys.argv[1:])
+
+
 if __name__ == "__main__":
-    main()
+    cli()

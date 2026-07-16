@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gaussian-lsp"
-version = "0.2.11"
+version = "0.2.12"
 description = "Language Server Protocol for Gaussian input files"
 readme = "README.md"
 license = {text = "MIT"}
@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-gaussian-lsp = "gaussian_lsp.server:main"
+gaussian-lsp = "gaussian_lsp.server:cli"
 gaussian-lsp-tool = "gaussian_lsp.tool:main"
 
 [tool.hatch.build.targets.wheel]
