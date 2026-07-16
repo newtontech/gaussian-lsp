@@ -77,6 +77,12 @@ isolated smoke verifies `gaussian-lsp --help`, installed version metadata, the
 agent JSON CLI, and valid, invalid, and runtime-log fixtures before the
 OIDC-enabled `pypi` environment can publish. No long-lived PyPI token is used.
 
+GitHub Release finalization runs independently after the verified wheel smoke
+and attaches that exact build artifact. A PyPI outage or trusted-publisher
+misconfiguration can therefore fail PyPI without suppressing the native GitHub
+Release; the finalizer also proves that the checkout and tag equal
+`GITHUB_SHA` before creating the release.
+
 Maintainers can exercise the same artifact smoke before creating a tag:
 
 ```bash
